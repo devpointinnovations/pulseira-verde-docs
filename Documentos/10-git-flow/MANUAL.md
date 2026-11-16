@@ -11,10 +11,10 @@ Manual operacional do sistema de monitoramento hospitalar por geolocalização, 
 > deste manual: histórico do git.
 
 > **Revisão 29/10/2026 — um repositório por área.** O monorepo `GabrielVogado/saude-monitor`
-> foi dividido em [`radar-saude-mobile`](https://github.com/devpointinnovations/radar-saude-mobile),
-> [`painel-admin-frontend`](https://github.com/devpointinnovations/painel-admin-frontend),
-> [`radar-saude-backend`](https://github.com/devpointinnovations/radar-saude-backend) e
-> [`radar-saude-docs`](https://github.com/devpointinnovations/radar-saude-docs) (este), na conta
+> foi dividido em [`pulseira-verde-mobile`](https://github.com/devpointinnovations/pulseira-verde-mobile),
+> [`pulseira-verde-admin`](https://github.com/devpointinnovations/pulseira-verde-admin),
+> [`pulseira-verde-backend`](https://github.com/devpointinnovations/pulseira-verde-backend) e
+> [`pulseira-verde-docs`](https://github.com/devpointinnovations/pulseira-verde-docs) (este), na conta
 > devpointinnovations, com o histórico preservado. **Cada repositório homologa sozinho**: a
 > `master` do mobile gera o APK HML e a rc dele, a `master` do backend publica o backend HML e
 > a rc dele (§3.3). Caminhos como `frontend/...`, `backend/...`, `deploy/...` e `.github/...`
@@ -160,8 +160,8 @@ feature/* ──► develop ──► master ──► release/<tag>
 ### 4.1 Workflows
 
 > Desde 29/10/2026 os workflows estão divididos: `cd-backend-google.yml` só no
-> radar-saude-backend; `cd-mobile-apk.yml`, `cd-mobile-eas.yml` e `cd-producao.yml` só no
-> radar-saude-mobile; `cd-homologacao.yml`, `release.yml` e `alarme-cd.yml` nos dois, cada
+> pulseira-verde-backend; `cd-mobile-apk.yml`, `cd-mobile-eas.yml` e `cd-producao.yml` só no
+> pulseira-verde-mobile; `cd-homologacao.yml`, `release.yml` e `alarme-cd.yml` nos dois, cada
 > um com a sua parte; `ci.yml` e `pr-origem-master.yml` nos três repositórios de código.
 
 | Workflow | Gatilho | Ação |

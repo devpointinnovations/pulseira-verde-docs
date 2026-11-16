@@ -2,6 +2,7 @@
 
 **Status:** histórico migrado e sincronizado em 16/11/2026; ajustes de CI/CD em PR em cada repositório; passos de conta do PO pendentes (§5). O monorepo continua sendo o repositório ativo até o PO decidir a virada (§6).
 **Base:** `GabrielVogado/saude-monitor`. Cópia inicial em 29/10 (`develop` em `3bf45be`, tags `v1.0.0-rc.1` a `rc.10`); sincronização em 16/11 (`develop` em `666f68f`, `master` em `ea7e8b0`, tags até `v1.0.0-rc.16`).
+**Nomes (16/11/2026):** a pedido do PO, os repositórios foram renomeados de `radar-saude-mobile`, `radar-saude-backend`, `radar-saude-docs` e `painel-admin-frontend` para `pulseira-verde-mobile`, `pulseira-verde-backend`, `pulseira-verde-docs` e `pulseira-verde-admin`. O GitHub redireciona os endereços antigos. As chaves dos projetos no SonarQube Cloud continuam as antigas (só os nomes exibidos são Pulseira Verde), e o APK passa a se chamar `pulseira-verde-hom-X.Y.Z-rc.N.apk` a partir da rc.18.
 **Pedido do PO (29/10/2026):** "migrar o projeto para o github devpointinnovations, onde cada setor terá seu repositório próprio, front end mobile, painel admin e back end". Decisões do PO: repositórios públicos, histórico inteiro preservado, commits antigos do Claude reescritos no nome do PO.
 
 ---
@@ -10,10 +11,10 @@
 
 | Repositório | Veio de | Também levou |
 |---|---|---|
-| [`radar-saude-mobile`](https://github.com/devpointinnovations/radar-saude-mobile) | `frontend/` (vira a raiz) e os arquivos do app que ficaram na raiz entre 26/02 e 21/03/2026 | `deploy/android/`, `doc/assets/` (GIFs do README), o `README.md` de apresentação, `.github/` |
-| [`painel-admin-frontend`](https://github.com/devpointinnovations/painel-admin-frontend) | `admin/` (vira a raiz) | `.github/` |
-| [`radar-saude-backend`](https://github.com/devpointinnovations/radar-saude-backend) | `backend/` (vira a raiz) | `deploy/google/`, `deploy/oracle/` (histórico), `perf/`, os dados geoespaciais de origem (histórico), o `render.yaml` da raiz em `deploy/render/` (histórico), `.github/` |
-| [`radar-saude-docs`](https://github.com/devpointinnovations/radar-saude-docs) (este) | `Documentos/` | `doc/tutorial-usuario/`, `site/` (Worker do saudemonitor.dev) |
+| [`pulseira-verde-mobile`](https://github.com/devpointinnovations/pulseira-verde-mobile) | `frontend/` (vira a raiz) e os arquivos do app que ficaram na raiz entre 26/02 e 21/03/2026 | `deploy/android/`, `doc/assets/` (GIFs do README), o `README.md` de apresentação, `.github/` |
+| [`pulseira-verde-admin`](https://github.com/devpointinnovations/pulseira-verde-admin) | `admin/` (vira a raiz) | `.github/` |
+| [`pulseira-verde-backend`](https://github.com/devpointinnovations/pulseira-verde-backend) | `backend/` (vira a raiz) | `deploy/google/`, `deploy/oracle/` (histórico), `perf/`, os dados geoespaciais de origem (histórico), o `render.yaml` da raiz em `deploy/render/` (histórico), `.github/` |
+| [`pulseira-verde-docs`](https://github.com/devpointinnovations/pulseira-verde-docs) (este) | `Documentos/` | `doc/tutorial-usuario/`, `site/` (Worker do saudemonitor.dev) |
 
 Cada repositório leva o histórico de `.github/` inteiro; o PR de ajuste de cada um tira os workflows que não são dele.
 
@@ -45,23 +46,23 @@ PRs citados em mensagens de commit e nos documentos (`#123`) são do repositóri
   - o registro em [`homologacoes/`](./homologacoes/) passa a citar o par usado no teste (APK `rc.N` + backend `rc.M`).
 - **Produção:** o `release.yml` de cada repositório cria a `release/<versão>` a partir da rc dele; no backend dispara o deploy de produção, no mobile o AAB.
 - **SonarQube Cloud:** organização `devpointinnovations`, projetos `devpointinnovations_radar-saude-mobile`, `devpointinnovations_painel-admin-frontend` e `devpointinnovations_radar-saude-backend`. O histórico de análises da organização `gabrielvogado` não migra.
-- **Google Cloud (WIF):** a federação aceitava só `GabrielVogado/saude-monitor`. Os dois comandos que liberam o repositório novo estão em `deploy/google/README.md` do radar-saude-backend.
+- **Google Cloud (WIF):** a federação aceitava só `GabrielVogado/saude-monitor`. Os dois comandos que liberam o repositório novo estão em `deploy/google/README.md` do pulseira-verde-backend.
 
 ## 4. PRs de ajuste
 
 | Repositório | PR |
 |---|---|
-| painel-admin-frontend | [#1](https://github.com/devpointinnovations/painel-admin-frontend/pull/1) |
-| radar-saude-backend | [#1](https://github.com/devpointinnovations/radar-saude-backend/pull/1) |
-| radar-saude-mobile | [#1](https://github.com/devpointinnovations/radar-saude-mobile/pull/1) |
-| radar-saude-docs | o PR deste documento |
+| pulseira-verde-admin | [#1](https://github.com/devpointinnovations/pulseira-verde-admin/pull/1) |
+| pulseira-verde-backend | [#1](https://github.com/devpointinnovations/pulseira-verde-backend/pull/1) |
+| pulseira-verde-mobile | [#1](https://github.com/devpointinnovations/pulseira-verde-mobile/pull/1) |
+| pulseira-verde-docs | o PR deste documento |
 
 ## 5. Passos de conta do PO
 
 1. ~~Em cada repositório: branch padrão `develop` e apagar a `main` criada junto com ele.~~ Feito: conferido em 16/11, os quatro têm `develop` como padrão e nenhuma `main`.
 2. Segredos do Actions: `SONAR_TOKEN` nos três repositórios de código; no mobile, `ANDROID_RELEASE_KEYSTORE_BASE64`, `ANDROID_RELEASE_STORE_PASSWORD`, `ANDROID_RELEASE_KEY_ALIAS`, `ANDROID_RELEASE_KEY_PASSWORD`, `ANDROID_KEYSTORE_BASE64`, `EXPO_TOKEN`, as variáveis `EXPO_PUBLIC_API_BASE_URL` e `EXPO_PUBLIC_API_BASE_URL_PROD` e, opcionais (sem eles o APK sai sem Sentry), `EXPO_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` e `SENTRY_PROJECT`. O `EXPO_PUBLIC_MAPBOX_TOKEN` deixou de ser usado com a volta ao MapLibre (M-071). Os valores não podem ser lidos do repositório antigo; vêm de onde foram guardados.
 3. SonarQube Cloud: importar a conta devpointinnovations e criar os três projetos com as chaves do §3.
-4. Google Cloud: rodar os dois comandos de `deploy/google/README.md` (radar-saude-backend) antes do primeiro deploy por lá.
+4. Google Cloud: rodar os dois comandos de `deploy/google/README.md` (pulseira-verde-backend) antes do primeiro deploy por lá.
 5. Importar os rulesets de `.github/rulesets/` em cada repositório e ligar o Code Scanning.
 6. Cópias locais: clonar os repositórios novos (o `D:\saude-monitor` continua apontando para o antigo).
 7. Primeira homologação pelo fluxo novo (backend `rc.17`, depois APK `rc.17`) valida tudo de ponta a ponta.

@@ -5,6 +5,13 @@
 
 ---
 
+## 📌 Revisão 16/11/2026 — Repositórios renomeados para Pulseira Verde
+
+**O que mudou:** os quatro repositórios da devpointinnovations passaram a `pulseira-verde-mobile`, `pulseira-verde-backend`, `pulseira-verde-docs` e `pulseira-verde-admin` (antes `radar-saude-*` e `painel-admin-frontend`). Links e nomes atualizados no README, no `10-git-flow/MANUAL.md`, no registro da migração e no da rc.17. Registros de rcs anteriores ficam com os nomes da época.
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md`.
+
+---
+
 ## 📌 Revisão 16/11/2026 — Homologação v1.0.0-rc.17
 
 **O que entrou:** registro da primeira rc pelo fluxo novo, uma por repositório ([`10-git-flow/homologacoes/v1.0.0-rc.17.md`](./10-git-flow/homologacoes/v1.0.0-rc.17.md)): backend `rc.17` no `radar-saude-backend` e APK `rc.17` no `radar-saude-mobile`, com o mesmo código da rc.16. Valida segredos, assinatura do APK, federação do Google Cloud e Sonar pela org. O roteiro da rc.16 continua valendo com o APK novo.
