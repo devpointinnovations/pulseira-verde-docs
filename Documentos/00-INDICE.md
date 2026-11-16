@@ -5,6 +5,13 @@
 
 ---
 
+## 📌 Revisão 16/11/2026 — Homologação v1.0.0-rc.17
+
+**O que entrou:** registro da primeira rc pelo fluxo novo, uma por repositório ([`10-git-flow/homologacoes/v1.0.0-rc.17.md`](./10-git-flow/homologacoes/v1.0.0-rc.17.md)): backend `rc.17` no `radar-saude-backend` e APK `rc.17` no `radar-saude-mobile`, com o mesmo código da rc.16. Valida segredos, assinatura do APK, federação do Google Cloud e Sonar pela org. O roteiro da rc.16 continua valendo com o APK novo.
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (a migração já está no M-077).
+
+---
+
 ## 📌 Revisão 16/11/2026 — Um repositório por área (devpointinnovations)
 
 **O que mudou:** a pedido do PO, o monorepo `GabrielVogado/saude-monitor` foi dividido em quatro repositórios públicos na conta devpointinnovations, com o histórico preservado: `radar-saude-mobile`, `painel-admin-frontend`, `radar-saude-backend` e este `radar-saude-docs` (com `doc/tutorial-usuario/` e `site/`). A primeira cópia é de 29/10 (até a rc.10); em 16/11 os quatro foram sincronizados com o monorepo até a `develop` `666f68f` e as tags `v1.0.0-rc.11` a `rc.16`. Cada repositório tem o CI da sua área e a homologação passa a ser por repositório. Caminhos `frontend/`, `admin/`, `backend/`, `deploy/` e `.github/` citados nos documentos passam a ser a raiz do repositório da área; PRs `#N` antigos são do repositório antigo. Registro e passos de conta pendentes em [`10-git-flow/Migracao-Repositorios-devpointinnovations-2026-10-29.md`](./10-git-flow/Migracao-Repositorios-devpointinnovations-2026-10-29.md); `10-git-flow/MANUAL.md` (§3.3, §3.4, §4.1) e `Historico-Melhorias.md` (M-077) atualizados.
