@@ -13,10 +13,10 @@ Documentação de produto e engenharia do Radar Saúde, o tutorial de uso e o si
 
 | Repositório | Conteúdo |
 |---|---|
-| [radar-saude-mobile](https://github.com/devpointinnovations/radar-saude-mobile) | App Expo / React Native |
-| [painel-admin-frontend](https://github.com/devpointinnovations/painel-admin-frontend) | Painel Admin Angular |
-| [radar-saude-backend](https://github.com/devpointinnovations/radar-saude-backend) | API Spring Boot, deploy no Cloud Run, testes de desempenho |
-| **radar-saude-docs** (este) | Documentação, tutorial e site |
+| [pulseira-verde-mobile](https://github.com/devpointinnovations/pulseira-verde-mobile) | App Expo / React Native |
+| [pulseira-verde-admin](https://github.com/devpointinnovations/pulseira-verde-admin) | Painel Admin Angular |
+| [pulseira-verde-backend](https://github.com/devpointinnovations/pulseira-verde-backend) | API Spring Boot, deploy no Cloud Run, testes de desempenho |
+| **pulseira-verde-docs** (este) | Documentação, tutorial e site |
 
 Até 29/10/2026 tudo ficava no monorepo
 [GabrielVogado/saude-monitor](https://github.com/GabrielVogado/saude-monitor). O histórico foi
