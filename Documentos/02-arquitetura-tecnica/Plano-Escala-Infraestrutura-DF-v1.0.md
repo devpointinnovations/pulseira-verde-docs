@@ -39,7 +39,7 @@ de plano quando a medição mandar, não antes.
 | Jobs | 4 `@Scheduled` de 15 min dentro da aplicação (agregados, feedback sem resposta, expiração, GPS interrompido) | `*Job.java` |
 | Cache | Nenhum cache de aplicação nem de borda; só `/api/v1/camadas/{tipo}` manda `Cache-Control` (1 dia) | `RegiaoController.java` |
 | E-mail | Resend no plano gratuito (100/dia) — usado na **confirmação do cadastro** e no "esqueci a senha" | `UserServiceImpl.java`, relatório de desempenho |
-| Mapa (app) | `@rnmapbox/maps` v10, cobrado por usuário ativo mensal (MAU) do SDK | `Arvore-Tecnologica-v2.1.md` |
+| Mapa (app) | `@rnmapbox/maps` v10, cobrado por usuário ativo mensal (MAU) do SDK. **Atualização 09/11/2026:** trocado por MapLibre + OpenFreeMap, sem cobrança por MAU (M-071, D3 respondida) | `_historico/Arvore-Tecnologica-v2.1.md` (atual: `Arvore-Tecnologica-v2.2.md`) |
 | CI/CD | GitHub Actions, imagem no Artifact Registry, WIF sem chave, smoke tests de Mongo e índice 2dsphere | `cd-backend-google.yml` |
 
 **O que já foi medido de carga** (`11-desempenho/Relatorio-Desempenho-HML-2026-09-23.md`): 100 usuários fazendo a
@@ -244,7 +244,7 @@ Metas: RNF-02 (p95 ≤ 300 ms, login fora do orçamento conforme §2.1 do relat�
 
 | # | Decisão | Recomendação |
 |---|---|---|
-| D1 | As premissas da §4 (10% de DAU, 15% na hora de pico) estão razoáveis para o Radar Saúde? | Começar com elas e recalibrar com o DAU real após o beta |
+| D1 | As premissas da §4 (10% de DAU, 15% na hora de pico) estão razoáveis para a Pulseira Verde? | Começar com elas e recalibrar com o DAU real após o beta |
 | D2 | Cloudflare Free ou borda 100% GCP? | Cloudflare Free (US$ 0 e cache sem custo de tráfego), se a prova de conceito da Fase 2 fechar |
 | D3 | Mapa: manter Mapbox ou voltar a MapLibre com tiles próprios? | Decidir antes de P2; com Mapbox, colocar teto de gasto na conta |
 | D4 | `min-instances=1` em produção (fecha a pendência do cold start do ADR-011, E8-01) | Sim, ~US$ 15–70/mês |

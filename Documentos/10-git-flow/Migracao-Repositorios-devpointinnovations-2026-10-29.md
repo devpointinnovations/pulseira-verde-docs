@@ -1,7 +1,7 @@
 # Migração para repositórios por área — devpointinnovations (29/10/2026)
 
-**Status:** histórico migrado; ajustes de CI/CD em PR em cada repositório; passos de conta do PO pendentes (§5).
-**Base:** `GabrielVogado/saude-monitor`, `develop` em `3bf45be` e `master` com as tags `v1.0.0-rc.1` a `v1.0.0-rc.10`.
+**Status:** histórico migrado e sincronizado em 16/11/2026; ajustes de CI/CD em PR em cada repositório; passos de conta do PO pendentes (§5). O monorepo continua sendo o repositório ativo até o PO decidir a virada (§6).
+**Base:** `GabrielVogado/saude-monitor`. Cópia inicial em 29/10 (`develop` em `3bf45be`, tags `v1.0.0-rc.1` a `rc.10`); sincronização em 16/11 (`develop` em `666f68f`, `master` em `ea7e8b0`, tags até `v1.0.0-rc.16`).
 **Pedido do PO (29/10/2026):** "migrar o projeto para o github devpointinnovations, onde cada setor terá seu repositório próprio, front end mobile, painel admin e back end". Decisões do PO: repositórios públicos, histórico inteiro preservado, commits antigos do Claude reescritos no nome do PO.
 
 ---
@@ -40,7 +40,7 @@ PRs citados em mensagens de commit e nos documentos (`#123`) são do repositóri
 - **Homologação por repositório.** Antes, um merge na `master` gerava uma rc com o APK e o backend juntos. Agora:
   - **mobile:** `master` → APK HML → tag `vX.Y.Z-rc.N` (X.Y.Z do `app.json`) + Release com o APK;
   - **backend:** `master` → deploy `saude-monitor-backend-hom` → tag `vX.Y.Z-rc.N` (X.Y.Z do `version` do `build.gradle`, que passou a `1.0.0`) + Release sem anexo;
-  - as duas numerações começam em `rc.11` e andam separadas;
+  - as tags `rc.11` a `rc.16` vieram do monorepo na sincronização de 16/11, então as duas numerações começam em `rc.17` e andam separadas;
   - quando o app depende de uma mudança da API, promover o **backend antes** do app. O APK continua apontando para a URL fixa de homologação.
   - o registro em [`homologacoes/`](./homologacoes/) passa a citar o par usado no teste (APK `rc.N` + backend `rc.M`).
 - **Produção:** o `release.yml` de cada repositório cria a `release/<versão>` a partir da rc dele; no backend dispara o deploy de produção, no mobile o AAB.
@@ -58,10 +58,21 @@ PRs citados em mensagens de commit e nos documentos (`#123`) são do repositóri
 
 ## 5. Passos de conta do PO
 
-1. Em cada repositório: branch padrão `develop` e apagar a `main` criada junto com ele.
-2. Segredos do Actions: `SONAR_TOKEN` nos três repositórios de código; no mobile, `ANDROID_RELEASE_KEYSTORE_BASE64`, `ANDROID_RELEASE_STORE_PASSWORD`, `ANDROID_RELEASE_KEY_ALIAS`, `ANDROID_RELEASE_KEY_PASSWORD`, `ANDROID_KEYSTORE_BASE64`, `EXPO_PUBLIC_MAPBOX_TOKEN`, `EXPO_TOKEN` e a variável `EXPO_PUBLIC_API_BASE_URL`. Os valores não podem ser lidos do repositório antigo; vêm de onde foram guardados.
+1. ~~Em cada repositório: branch padrão `develop` e apagar a `main` criada junto com ele.~~ Feito: conferido em 16/11, os quatro têm `develop` como padrão e nenhuma `main`.
+2. Segredos do Actions: `SONAR_TOKEN` nos três repositórios de código; no mobile, `ANDROID_RELEASE_KEYSTORE_BASE64`, `ANDROID_RELEASE_STORE_PASSWORD`, `ANDROID_RELEASE_KEY_ALIAS`, `ANDROID_RELEASE_KEY_PASSWORD`, `ANDROID_KEYSTORE_BASE64`, `EXPO_TOKEN`, as variáveis `EXPO_PUBLIC_API_BASE_URL` e `EXPO_PUBLIC_API_BASE_URL_PROD` e, opcionais (sem eles o APK sai sem Sentry), `EXPO_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` e `SENTRY_PROJECT`. O `EXPO_PUBLIC_MAPBOX_TOKEN` deixou de ser usado com a volta ao MapLibre (M-071). Os valores não podem ser lidos do repositório antigo; vêm de onde foram guardados.
 3. SonarQube Cloud: importar a conta devpointinnovations e criar os três projetos com as chaves do §3.
 4. Google Cloud: rodar os dois comandos de `deploy/google/README.md` (radar-saude-backend) antes do primeiro deploy por lá.
 5. Importar os rulesets de `.github/rulesets/` em cada repositório e ligar o Code Scanning.
 6. Cópias locais: clonar os repositórios novos (o `D:\saude-monitor` continua apontando para o antigo).
-7. Primeira homologação pelo fluxo novo (backend `rc.11`, depois APK `rc.11`) valida tudo de ponta a ponta.
+7. Primeira homologação pelo fluxo novo (backend `rc.17`, depois APK `rc.17`) valida tudo de ponta a ponta.
+
+## 6. Sincronização com o monorepo
+
+Enquanto o trabalho continuar no `GabrielVogado/saude-monitor`, cada merge lá só chega aos repositórios da org por uma nova sincronização. O filtro é determinístico: rodado de novo sobre o monorepo, ele gera os mesmos commits já publicados e acrescenta só os novos, então o envio é fast-forward e não reescreve nada. Ferramentas na pasta do projeto (`ferramentas/migracao-org/`):
+
+- `admin.txt`, `backend.txt`, `docs.txt`: `git filter-repo --paths-from-file <arquivo> --mailmap mailmap --message-callback "$(cat msg_cb.py)"`;
+- mobile: `git filter-repo --mailmap mailmap --message-callback "$(cat msg_cb.py)" --commit-callback "$(cat mobile_cb.py)"`, depois `git lfs fetch --all` do monorepo e `git lfs migrate export --everything --include="*.apk" --yes`;
+- conferência antes do envio: a tag `v1.0.0-rc.10` gerada tem de ter o mesmo hash da que está no repositório da org, e a `develop` da org tem de ser ancestral da nova;
+- envio de `develop`, `master` e das tags novas sem `--force`, com o `CD - Homologação` desligado durante o push na `master` (sem os segredos ele só falharia, mas não deve rodar sem querer).
+
+A sincronização para quando o PO fizer a virada: os PRs passam a ser abertos nos repositórios da org e o monorepo recebe só o aviso no README.

@@ -1,6 +1,6 @@
 <section class="capa" markdown="1">
 
-<p class="capa-kicker">Radar Saúde · saude-monitor</p>
+<p class="capa-kicker">Pulseira Verde · saude-monitor</p>
 
 # Análise de Escalabilidade, Segurança e Custo para o Distrito Federal
 
@@ -1089,7 +1089,7 @@ O plano de 08/10/2026 dimensiona pela **sessão de uso** (12 requisições por j
 
 ## 12. Arquitetura-alvo
 
-![Arquitetura-alvo do Radar Saúde](assets/arquitetura-alvo-df-v1.0.svg)
+![Arquitetura-alvo da Pulseira Verde](assets/arquitetura-alvo-df-v1.0.svg)
 
 ### 12.1 Princípios
 
@@ -1135,7 +1135,7 @@ O Quarkus não é a mesma pergunta do WebFlux. Ele aceita o código imperativo d
 | Memória na 1ª requisição | 495 MiB | 277 MiB | – | 98 MiB | 303 MiB |
 | Vazão | 9.971 tps | 15.299 tps | – | 5.437 tps | 2.150 tps |
 
-No mesmo laboratório, o Spring com cache AOT ficou em 7,9 s. É o benchmark de quem defende o produto, em 4 núcleos e sem MongoDB; o Radar roda em 1 vCPU com Atlas, então a proporção não se transfere direto.
+No mesmo laboratório, o Spring com cache AOT ficou em 7,9 s. É o benchmark de quem defende o produto, em 4 núcleos e sem MongoDB; a Pulseira Verde roda em 1 vCPU com Atlas, então a proporção não se transfere direto.
 
 **O custo.**
 
@@ -1506,7 +1506,7 @@ I = impacto, R = risco, E = esforço (1 a 5). Prioridade = (I + R) × (6 − E).
 **Documentos lidos** (pasta `Documentos/`, commit-base `develop@1d2e431`):
 
 - `00-INDICE.md` e `01-negocio/Documento-Negocial-v2.1.md`;
-- em `02-arquitetura-tecnica/`: `Arvore-Tecnologica-v2.1.md`, `Plano-Escala-Infraestrutura-DF-v1.0.md` e `Especificacao-API-v2.4.md` (consulta);
+- em `02-arquitetura-tecnica/`: `Arvore-Tecnologica-v2.1.md` (em `_historico/` desde 09/11/2026, substituída pela v2.2), `Plano-Escala-Infraestrutura-DF-v1.0.md` e `Especificacao-API-v2.4.md` (consulta);
 - em `09-melhoria-continua/`: `Plano-Implantacao-Cache-Fila-Resiliencia-v1.0.md` e `Arquitetura de Resiliência, Segurança e Evolução Contínua.md`;
 - `08-analise tecnica/adrs.md` (ADR-011 a ADR-015);
 - `11-desempenho/Relatorio-Desempenho-HML-2026-09-23.md` e `12-seguranca/Pentest-HML-2026-09-23.md`;

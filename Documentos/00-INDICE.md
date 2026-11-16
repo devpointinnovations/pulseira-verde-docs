@@ -1,14 +1,120 @@
 # 📚 Índice Central da Documentação — saude-monitor
 
 > **Sistema de Monitoramento Hospitalar por Geolocalização (Clinical Sanctuary)**
-> Última atualização: 29/10/2026 · Responsável: Gabriel Vogado
+> Última atualização: 16/11/2026 · Responsável: Gabriel Vogado
 
 ---
 
-## 📌 Revisão 29/10/2026 — Um repositório por área (devpointinnovations)
+## 📌 Revisão 16/11/2026 — Um repositório por área (devpointinnovations)
 
-**O que mudou:** a pedido do PO, o monorepo `GabrielVogado/saude-monitor` virou quatro repositórios públicos na conta devpointinnovations, com o histórico preservado: `radar-saude-mobile`, `painel-admin-frontend`, `radar-saude-backend` e este `radar-saude-docs` (com `doc/tutorial-usuario/` e `site/`). Cada repositório tem o CI da sua área e a homologação passa a ser por repositório. Caminhos `frontend/`, `admin/`, `backend/`, `deploy/` e `.github/` citados nos documentos passam a ser a raiz do repositório da área; PRs `#N` antigos são do repositório antigo. Registro e passos de conta pendentes em [`10-git-flow/Migracao-Repositorios-devpointinnovations-2026-10-29.md`](./10-git-flow/Migracao-Repositorios-devpointinnovations-2026-10-29.md); `10-git-flow/MANUAL.md` (§3.3, §3.4, §4.1) e `Historico-Melhorias.md` (M-069) atualizados.
+**O que mudou:** a pedido do PO, o monorepo `GabrielVogado/saude-monitor` foi dividido em quatro repositórios públicos na conta devpointinnovations, com o histórico preservado: `radar-saude-mobile`, `painel-admin-frontend`, `radar-saude-backend` e este `radar-saude-docs` (com `doc/tutorial-usuario/` e `site/`). A primeira cópia é de 29/10 (até a rc.10); em 16/11 os quatro foram sincronizados com o monorepo até a `develop` `666f68f` e as tags `v1.0.0-rc.11` a `rc.16`. Cada repositório tem o CI da sua área e a homologação passa a ser por repositório. Caminhos `frontend/`, `admin/`, `backend/`, `deploy/` e `.github/` citados nos documentos passam a ser a raiz do repositório da área; PRs `#N` antigos são do repositório antigo. Registro e passos de conta pendentes em [`10-git-flow/Migracao-Repositorios-devpointinnovations-2026-10-29.md`](./10-git-flow/Migracao-Repositorios-devpointinnovations-2026-10-29.md); `10-git-flow/MANUAL.md` (§3.3, §3.4, §4.1) e `Historico-Melhorias.md` (M-077) atualizados.
 **Sem mudança:** `De-Para-Backlog-Features.md` (infraestrutura do repositório, sem estória entregue).
+
+---
+
+## 📌 Revisão 13/11/2026 — Desenho de hospitais por estado
+
+**O que entrou:** a pedido do PO, o [`Desenho-Hospitais-por-Estado-v1.0.md`](./02-arquitetura-tecnica/Desenho-Hospitais-por-Estado-v1.0.md) prepara o lançamento fora do DF com o CNES/DATASUS: cada pessoa vê o seu estado e o app é liberado estado a estado. Mede a base por UF (60.086 públicos ativos nos tipos do app, 5.002 só hospitais e urgência), aponta o limite do catálogo numa chave só do AsyncStorage, descreve backend, app, painel, escala e LGPD, compara três caminhos, lista as decisões D1–D7 para o PO e propõe cinco fases (21 a 23 dias até a segunda UF). O PO aprovou o desenho em 13/11/2026: as UBS entram fora do DF (o que fixa o catálogo por UF, o catálogo em arquivo no app e o agrupamento no mapa), privados continuam fora, a UF sai da malha do IBGE no aparelho e fica só nele, visita em UF não liberada não registra, e GO é a segunda UF. Registrado no ADR-017, aceito (`08-analise tecnica/adrs.md`). Sem código.
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (desenho, sem entrega).
+
+---
+
+## 📌 Revisão 12/11/2026 — Homologação v1.0.0-rc.16
+
+**O que entrou:** registro da rc que leva a fila offline enviada com o app fechado (PR #255, M-075, só app; o backend sai igual ao da rc.15). O roteiro começa pelo teste de campo da saída sem internet com o app fechado e remete aos roteiros da rc.15, da rc.14 e da rc.13, que não foram feitos. Passa a ser a candidata à `release/1.0.0`. Em [`10-git-flow/homologacoes/v1.0.0-rc.16.md`](./10-git-flow/homologacoes/v1.0.0-rc.16.md).
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (promoção de versão, sem estória nem melhoria nova).
+
+---
+
+## 📌 Revisão 11/11/2026 — Fila offline enviada com o app fechado
+
+**O que mudou:** o app ganha uma tarefa de segundo plano (`expo-background-task`, WorkManager no Android) que envia a fila offline a cada ~15 min mesmo com o app fechado. Antes, a saída guardada sem internet só saía com o app aberto ou num evento do geofencing. Só app. Registro em `Historico-Melhorias.md` (M-075).
+**Também:** `De-Para-Backlog-Features.md`, E2-05.
+
+---
+
+## 📌 Revisão 11/11/2026 — Homologação v1.0.0-rc.15
+
+**O que entrou:** registro da rc que leva o nome Pulseira Verde no app, no painel e no backend (PR #253, M-074), a chave do JWT com rotação por `kid` (PR #256, M-076, ainda desligada: homologação segue assinando com a chave legada) e o teto de 10 min da análise do Sonar no CI (PR #254). O roteiro confere o nome novo no aparelho e a sessão sem regressão, e remete aos roteiros da rc.14 e da rc.13, que não foram feitos. Passa a ser a candidata à `release/1.0.0`. Em [`10-git-flow/homologacoes/v1.0.0-rc.15.md`](./10-git-flow/homologacoes/v1.0.0-rc.15.md).
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (promoção de versão, sem estória nem melhoria nova).
+
+---
+
+## 📌 Revisão 11/11/2026 — Chave do JWT com rotação (SEG-04)
+
+**O que mudou:** o backend passa a aceitar mais de uma chave do JWT ao mesmo tempo. O token novo leva no cabeçalho o `kid` da chave ativa (`JWT_CHAVE_ATIVA`) e a validação escolhe a chave pelo `kid` entre as publicadas (`JWT_CHAVES`); a chave atual (`JWT_SECRET`) vira legada, sem `kid`, e segue assinando até a primeira rotação. Configuração inválida derruba o boot. Procedimento de rotação em `deploy/google/README.md` e registro em `Historico-Melhorias.md` (M-076).
+**Também:** `De-Para-Backlog-Features.md` ganha SEG-04 como parcial (falta a primeira rotação nos ambientes).
+
+---
+
+## 📌 Revisão 11/11/2026 — Projeto passa a se chamar Pulseira Verde
+
+**O que mudou:** "Radar Saúde" é marca registrada de terceiro no INPI (nº 928495230, classe 42). A pedido do PO, o nome de exibição passa a ser **Pulseira Verde** no app, no painel admin, na mensagem de manutenção do backend, no site `saudemonitor.dev`, nos títulos das GitHub Releases, no Sonar, no `perf/` e na documentação ativa. Identificadores técnicos (pacote Android, pacote Java, banco, serviços do Cloud Run, domínio, Worker do site) não mudam. Registros históricos ficam com o nome da época. Registro em `Historico-Melhorias.md` (M-074).
+**Sem mudança:** `De-Para-Backlog-Features.md` (troca de nome, sem estória; só a menção ao nome foi atualizada).
+
+---
+
+## 📌 Revisão 11/11/2026 — Homologação v1.0.0-rc.14
+
+**O que entrou:** registro da rc que leva o refresh do Painel Admin em cookie `HttpOnly` (PR #250, M-073, backend e painel; o app sai igual ao da rc.13). Como o painel não tem hospedagem e a API está em `run.app`, o roteiro confere a regressão do login do app e as rotas do painel no backend HML por `curl`; o fluxo completo no navegador depende do domínio próprio da API. Remete ao roteiro da rc.13 inteiro, que não foi feito. Passa a ser a candidata à `release/1.0.0`. Em [`10-git-flow/homologacoes/v1.0.0-rc.14.md`](./10-git-flow/homologacoes/v1.0.0-rc.14.md).
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (promoção de versão, sem estória nem melhoria nova).
+
+---
+
+## 📌 Revisão 10/11/2026 — Refresh do painel admin em cookie HttpOnly (ADR-013, SEG-05)
+
+**O que mudou:** o painel deixa de guardar token no `sessionStorage`. O backend ganha `POST /api/v1/auth/painel/login`, `/refresh` e `/logout`, só para ADMIN, com o refresh no cookie `__Host-painel_refresh` (`HttpOnly`, `Secure`, `SameSite=Strict`), `Origin` e `X-Requested-With` exigidos e CORS com credenciais só para a origem do painel (nova `APP_CORS_PAINEL_ORIGIN`). O painel guarda o access só em memória e recupera a sessão pelo cookie ao recarregar. O app não muda. ADR-013 passa a "Implementado", com a dependência do domínio próprio da API para valer em produção. Atualizados a §3.1 e a §5 da `Especificacao-API-v2.4.md` e o `deploy/google/README.md`. Registro em `Historico-Melhorias.md` (M-073).
+**Também:** `De-Para-Backlog-Features.md` ganha o SEG-05 (parcial: falta o domínio).
+**Novo:** [`02-arquitetura-tecnica/Necessidades-Refresh-Painel-Cookie-v1.0.md`](./02-arquitetura-tecnica/Necessidades-Refresh-Painel-Cookie-v1.0.md) lista o que falta fora do código para o cookie valer em cada ambiente (domínio da API, painel publicado no mesmo site, variáveis, borda, conta ADMIN), as decisões pendentes e o critério de aceite.
+
+---
+
+## 📌 Revisão 09/11/2026 — Homologação v1.0.0-rc.13
+
+**O que entrou:** registro da rc que leva a correção do teste do rate limit (PR #247, M-072, só backend e sem mudança de comportamento em produção). O app sai igual ao da rc.12. O roteiro confere o uso normal sem 429 e remete ao roteiro da rc.12 inteiro, que não foi feito. Passa a ser a candidata à `release/1.0.0`. Em [`10-git-flow/homologacoes/v1.0.0-rc.13.md`](./10-git-flow/homologacoes/v1.0.0-rc.13.md).
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (promoção de versão, sem estória nem melhoria nova).
+
+---
+
+## 📌 Revisão 09/11/2026 — Teste do rate limit na virada do minuto
+
+**O que mudou:** o teste do teto por IP falhava quando as 101 chamadas atravessavam a virada da janela fixa de 1 minuto (CI do PR #246). O `RateLimitService` passa a receber o relógio pelo construtor; o teste usa um relógio parado. Sem mudança de comportamento em produção. Registro em `Historico-Melhorias.md` (M-072).
+**Sem mudança:** `De-Para-Backlog-Features.md` (correção de teste, sem estória).
+
+---
+
+## 📌 Revisão 09/11/2026 — Homologação v1.0.0-rc.12
+
+**O que entrou:** registro da rc que leva duas mudanças do app: a renovação da sessão antes do pedido e a visita provisória da entrada sem internet (PR #243, M-070, correção do teste de campo de 29/10) e o mapa com MapLibre e OpenFreeMap no lugar do Mapbox (PR #244, M-071). O backend sai igual ao da rc.11. O roteiro começa pelo mapa e pela visita automática de mais de 15 min, com e sem internet, e remete ao roteiro da rc.11 inteiro, que não foi feito. Passa a ser a candidata à `release/1.0.0`. Em [`10-git-flow/homologacoes/v1.0.0-rc.12.md`](./10-git-flow/homologacoes/v1.0.0-rc.12.md).
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (promoção de versão, sem estória nem melhoria nova).
+
+---
+
+## 📌 Revisão 09/11/2026 — Mapa volta para MapLibre
+
+**O que mudou:** a pedido do PO, o mapa do app sai do Mapbox (cobrado por usuário ativo) e volta para MapLibre: `@maplibre/maplibre-react-native` v11 no aparelho e `maplibre-gl` v5 na Web, com o estilo Liberty do OpenFreeMap, sem chave. Saem o Maven privado da Mapbox e o segredo `EXPO_PUBLIC_MAPBOX_TOKEN` (removido do `cd-mobile-apk.yml` e da tabela de secrets do `10-git-flow/MANUAL.md`). As telas continuam usando só o adaptador `utils/mapkit`. Só app. Registro em `Historico-Melhorias.md` (M-071); `Arvore-Tecnologica` v2.1 → v2.2 (anterior em `_historico/`).
+**Sem mudança:** `De-Para-Backlog-Features.md` (troca de biblioteca, sem estória entregue). `Features-MVP-v2.3.md` e o relatório de aderência ainda citam o Mapbox na F-07 como retrato de 12/09.
+
+---
+
+## 📌 Revisão 04/11/2026 — Sinal e saída da visita com a sessão vencida
+
+**O que mudou:** teste de campo de 29/10 (rc.10): a visita automática ficou de novo como GPS interrompido com 0 min. O banco e os logs de homologação mostraram o sinal da visita recusado com 403 depois dos 15 min do token, porque as rotas públicas de visita tratam o token vencido como anônimo e o app só renovava em 401. O app passa a renovar a sessão antes do pedido quando o token venceu; a entrada confirmada sem internet vira visita provisória, com a saída guardada na fila logo atrás do check-in. Só app. Registro em `Historico-Melhorias.md` (M-070).
+**Também:** `De-Para-Backlog-Features.md` atualiza E2-05 e o `Documento-Negocial-v2.1.md` complementa a RN-06.
+
+---
+
+## 📌 Revisão 29/10/2026 — Homologação v1.0.0-rc.11
+
+**O que entrou:** registro da rc que leva o crash reporting do app com Sentry (PR #240, M-069, só app; o backend sai igual ao da rc.10). Exige os secrets do Sentry cadastrados antes do merge na `master`, senão o APK sai com o Sentry desligado. O roteiro começa pela conferência dos erros no painel do Sentry, sem dado pessoal, e remete ao roteiro da rc.10 inteiro, que não foi feito. Passa a ser a candidata à `release/1.0.0`. Em [`10-git-flow/homologacoes/v1.0.0-rc.11.md`](./10-git-flow/homologacoes/v1.0.0-rc.11.md).
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (promoção de versão, sem estória nem melhoria nova).
+
+---
+
+## 📌 Revisão 28/10/2026 — Crash reporting no app (E8-07)
+
+**O que mudou:** o app passa a enviar ao Sentry os erros não tratados e os que as tarefas de segundo plano só escreviam no console, com coordenadas, e-mail, nome, telefone, tokens e identificador do aparelho apagados antes do envio. Liga só com o DSN do build do CI; o `cd-mobile-apk.yml` ganha os secrets opcionais do Sentry e o envio do mapa de código. Política de privacidade (`site/`, versão 1.2) cita o Sentry como operador. Registro em `Historico-Melhorias.md` (M-069).
+**Também:** `De-Para-Backlog-Features.md` atualiza E8-07 para parcial (falta validar no APK de homologação; painel e backend ficam para depois).
 
 ---
 
@@ -455,10 +561,11 @@ Documentos/
 │   └── Documento-Negocial-v2.1.md            ← problema, público, jornada, regras de negócio, LGPD, KPIs
 │
 ├── 02-arquitetura-tecnica/                   ← visão técnica e de engenharia
-│   ├── Arvore-Tecnologica-v2.1.md            ← stack atual vs. proposta, manter/refatorar, ADRs, roadmap
+│   ├── Arvore-Tecnologica-v2.2.md            ← stack atual vs. proposta, manter/refatorar, ADRs, roadmap
 │   ├── Especificacao-API-v2.4.md             ← contratos REST (OpenAPI), modelo de dados MongoDB, fluxos (+ §3.6 camadas)
 │   ├── Plano-Tecnico-Painel-Administrativo-Web-v1.0.md  ← stack, estrutura de pastas e consumo de API do painel web (F-11)
 │   ├── Plano-Escala-Infraestrutura-DF-v1.0.md  ← patamares de carga, custo e migração da infraestrutura para o DF
+│   ├── Desenho-Hospitais-por-Estado-v1.0.md  ← catálogo por UF para o lançamento nacional (CNES), decisões D1–D7 e fases. ADR-017
 │   ├── Analise-Escalabilidade-Seguranca-DF-v1.0.md (+ .pdf)  ← 46 gaps por setor, soluções, custos, roteiro e perguntas ao PO
 │   ├── Contexto-Sessao-Analise-Escala-Seguranca-2026-10-18.md  ← resumo da análise para o projeto Radar Saude no Claude
 │   ├── Guia-Ambiente-Local-v1.0.md           ← subir backend (Docker) e app (Expo) na máquina; era o README da raiz até 23/10/2026
@@ -489,7 +596,7 @@ Documentos/
 │   ├── Relatorio-Auditoria-Tecnica-v4.0.md   ← auditoria do app v4.0 (out/2026): estado de servidor e de sessão
 │   ├── SDD-TanStack-Query-Zustand-v1.0.md    ← desenho da adoção de TanStack Query v5 e Zustand v5
 │   ├── Conferencia-Auditoria-v4-e-SDD.md     ← o que procede, o que mudou e as correções aos trechos da SDD
-│   └── adrs.md                               ← ADR-001..014 (ADR-001 implementado e ADR-004 substituído em 05/10/2026)
+│   └── adrs.md                               ← ADR-001..015 e ADR-017 (ADR-001 implementado e ADR-004 substituído em 05/10/2026)
 │
 ├── 09-melhoria-continua/                     ← melhorias de processo e de comportamento do agente
 │   ├── Historico-Melhorias.md                ← o que entrou, quando, por qual PR e com que efeito
@@ -513,7 +620,7 @@ Documentos/
     ├── Backlog-MVP-v2.0.md                   ← substituído pela v2.1 em 02/09/2026
     ├── Plano-Sprints-v2.0.md                 ← substituído pela v2.1 em 02/09/2026
     ├── Especificacao-API-v2.0.md / -v2.1.md  ← v2.1 substituída pela v2.2 em 12/09/2026
-    ├── Arvore-Tecnologica-v2.0.md            ← substituída pela v2.1 em 12/09/2026
+    ├── Arvore-Tecnologica-v2.0.md / -v2.1.md ← v2.1 substituída pela v2.2 em 09/11/2026
     ├── Relatorio-Aderencia-Codigo-vs-Features-v1.md / -v3.5.md / -v3.6.md / -v3.7.md
     └── De-Para-Backlog-Features-v1.md / -v2.md ← retratos anteriores do status das estórias
 ```
@@ -525,12 +632,13 @@ Documentos/
 | # | Documento | Versão | Status | Resumo |
 |---|---|---|---|---|
 | 1 | [Documento Negocial](./01-negocio/Documento-Negocial-v2.1.md) | **2.1** | ✅ Ativo | Problema, proposta de valor, público, jornada do usuário, regras de negócio do geofence/feedback, modelo de dados conceitual, KPIs, roadmap e conformidade LGPD. |
-| 2 | [Árvore Tecnológica](./02-arquitetura-tecnica/Arvore-Tecnologica-v2.1.md) | **2.1** | ✅ Ativo | Mapa da stack atual (Spring Boot 4 + MongoDB + Expo 55 + **Mapbox v10**), decisões manter/refatorar/adicionar, matriz comparativa, ADRs e plano de evolução. **v2.1 (12/09/2026):** linhagem do mapa (`react-native-maps` → MapLibre → Mapbox) + contexto `regiao`. |
+| 2 | [Árvore Tecnológica](./02-arquitetura-tecnica/Arvore-Tecnologica-v2.2.md) | **2.2** | ✅ Ativo | Mapa da stack atual (Spring Boot 4 + MongoDB + Expo 55 + **MapLibre v11 + OpenFreeMap**), decisões manter/refatorar/adicionar, matriz comparativa, ADRs e plano de evolução. **v2.2 (09/11/2026):** mapa sai do Mapbox e volta para MapLibre (M-071). |
 | 3 | [Especificação da API](./02-arquitetura-tecnica/Especificacao-API-v2.4.md) | **2.4** | ✅ Ativo | Contratos REST de todos os endpoints (auth, hospitais, visitas, feedbacks, agregados, **camadas**), coleções MongoDB com índices/GeoJSON e fluxo geofence → API. **v2.4 (04/10/2026):** `GET /api/v1/contas/feedbacks/pendentes` e feedback aceito em visita `GPS_INTERROMPIDO` (M-029). **v2.2 (12/09/2026):** novo §3.6 `GET /api/v1/camadas/{tipo}` (F-11). v2.1 (06/09/2026) fechava CONT-01/CONT-02 (E8-14). |
 | 3b | [Plano Técnico — Painel Administrativo Web](./02-arquitetura-tecnica/Plano-Tecnico-Painel-Administrativo-Web-v1.0.md) | 1.0 | 🟡 Proposta | Stack (React + Vite + Leaflet), estrutura de pastas de `web-admin/` e estratégia de consumo da API existente para o painel administrativo (F-11). |
 | 3c | [Plano de Escala da Infraestrutura para o DF](./02-arquitetura-tecnica/Plano-Escala-Infraestrutura-DF-v1.0.md) | 1.0 | 🟡 Proposta | Estrutura atual medida, travas para escalar, patamares de carga com custo estimado (US$/mês) e migração em cinco fases. ADR-015. |
 | 3d | [Análise de Escalabilidade, Segurança e Custo para o DF](./02-arquitetura-tecnica/Analise-Escalabilidade-Seguranca-DF-v1.0.md) ([PDF](./02-arquitetura-tecnica/Analise-Escalabilidade-Seguranca-DF-v1.0.pdf)) | 1.0 | 🟡 Proposta | 46 gaps em 8 setores com evidência, soluções e recomendação; modelo de carga revisado (recálculo de geofence em 2º plano); arquitetura-alvo; custos por patamar; roteiro; plano de prova de carga; ADR-016 proposto; por que não Quarkus (§12.4); 15 perguntas ao PO com sugestões. Complementa o 3c. |
 | 3e | [Contexto da análise de escala (resumo)](./02-arquitetura-tecnica/Contexto-Sessao-Analise-Escala-Seguranca-2026-10-18.md) | 18/10/2026 | ✅ Ativo | Resumo do 3d para o projeto "Radar Saude" no Claude: conclusões, gaps, perguntas pendentes com o efeito de cada resposta, roteiro e mapa dos documentos. Em caso de divergência, vale o 3d. |
+| 3g | [Desenho — Hospitais por estado](./02-arquitetura-tecnica/Desenho-Hospitais-por-Estado-v1.0.md) | 1.0 | 🟢 Aprovado, não iniciado | Base CNES medida por UF, catálogo por estado no backend, no app e no painel, liberação UF a UF, visita fora do estado, escala e LGPD; decisões D1–D7 tomadas em 13/11/2026 e cinco fases. ADR-017. |
 | 3f | [Guia do Ambiente Local](./02-arquitetura-tecnica/Guia-Ambiente-Local-v1.0.md) | 1.0 | ✅ Ativo | Como subir backend (Spring Boot + MongoDB via Docker) e app (Expo) na máquina, URL da API por plataforma, como parar o ambiente e problemas comuns (tela branca, `Network request failed`). Era o `README.md` da raiz até 23/10/2026. |
 | 4 | [Padrão UI/UX](./03-ui-ux/Padrao-UI-UX-v2.1.md) | **2.1** | ✅ Ativo | Princípios de UX, personas, jornada ponta a ponta, arquitetura de informação, design system completo (tokens, componentes), acessibilidade WCAG AA, LGPD por design e protótipos ASCII. |
 | 5 | [Backlog do MVP](./04-backlog/Backlog-MVP-v2.2.md) | **2.2** | ✅ Ativo | Backlog priorizado (Fase 0 + 8 épicos), decisões de priorização (§2.1), **Épico 8 — Estabilização e Desempenho**, sequência real S0–S8 + planejada S9–S12, DoD com situação real e regra de atualização documental. |
@@ -546,7 +654,7 @@ Documentos/
 | 15 | [Auditoria — Código Morto, Lógica Ambígua e Erros Silenciosos](./08-analise%20tecnica/Auditoria-Codigo-Morto-Logica-Ambigua-Erros-Silenciosos-v1.0.md) | 1.0 | 🟡 Em correção | 19 achados (backend + frontend) com plano de correção priorizado P0–P3 e status por item. Commit-base `27ee9e6`. |
 | 16 | [Arquitetura de Resiliência, Segurança e Evolução Contínua](<./09-melhoria-continua/Arquitetura de Resiliência, Segurança e Evolução Contínua.md>) | — | 🟡 Proposta | SDD: rate limit (Token/Leaky Bucket + Redis), migrations versionadas, testes de carga (k6), testes A/B (feature flags) e JWT com expiração curta + refresh + JWKS/rotação de chaves. Não estava indexado aqui até 09/09/2026, apesar de já existir no repositório. |
 | 17 | [Plano de Implantação — Cache, Fila e Resiliência](./09-melhoria-continua/Plano-Implantacao-Cache-Fila-Resiliencia-v1.0.md) | 1.0 | 🟡 Proposta | Diagnóstico técnico (arquivo:linha) das leituras/escritas pesadas e dos 4 jobs `@Scheduled` possivelmente não confiáveis no Cloud Run atual; plano em 7 fases (otimizações → Mongock → feature flags → cache Upstash/rate limit → fila Cloud Tasks/Scheduler → JWT RS256/JWKS → k6), aplicando o item 16. Nenhuma fase implementada ainda. |
-| 18 | [Migração para repositórios por área](./10-git-flow/Migracao-Repositorios-devpointinnovations-2026-10-29.md) | 29/10/2026 | 🟡 Em andamento | Para onde foi cada pasta do monorepo, como o histórico foi separado, o que muda na homologação e os passos de conta do PO |
+| 18 | [Migração para repositórios por área](./10-git-flow/Migracao-Repositorios-devpointinnovations-2026-10-29.md) | 16/11/2026 | 🟡 Em andamento | Para onde foi cada pasta do monorepo, como o histórico foi separado e sincronizado, o que muda na homologação e os passos de conta do PO |
 
 ---
 
@@ -566,7 +674,7 @@ Documentos/
 | Quem é você | Comece por |
 |---|---|
 | **Product Owner / Negócio** | `01-negocio/Documento-Negocial-v2.1.md` → `04-backlog/Backlog-MVP-v2.2.md` → `De-Para-Backlog-Features.md` (status real) |
-| **Arquiteto / Backend** | `02-arquitetura-tecnica/Arvore-Tecnologica-v2.1.md` (decisões, ADRs) → `02-arquitetura-tecnica/Especificacao-API-v2.4.md` (contratos) |
+| **Arquiteto / Backend** | `02-arquitetura-tecnica/Arvore-Tecnologica-v2.2.md` (decisões, ADRs) → `02-arquitetura-tecnica/Especificacao-API-v2.4.md` (contratos) |
 | **Frontend / Mobile** | `03-ui-ux/Padrao-UI-UX-v2.1.md` → `02-arquitetura-tecnica/Especificacao-API-v2.4.md` (consumo) |
 | **Designer** | `03-ui-ux/Padrao-UI-UX-v2.1.md` → `_historico/v1.2-design-clinical-sanctuary/` (base da identidade) |
 | **QA / Testes** | Regras de negócio (Documento Negocial §6) + critérios de aceite (Backlog) + contratos (Especificação da API) |

@@ -1170,8 +1170,9 @@ O que **precisa ser reescrito em Angular** (não vem de graça do app): sessão/
 
 ## ADR-013: Refresh token em cookie HttpOnly no Painel Admin Web
 
-**Data:** 2026-09-25
-**Status:** Aceito (direção, decisão do PO em 25/09/2026) — implementação **pendente** e sequenciada
+**Data:** 2026-09-25 · **Implementado em:** 2026-11-05 (SEG-05, [M-073](../09-melhoria-continua/Historico-Melhorias.md))
+**Status:** Implementado — no código (backend e painel). Ponta a ponta em produção depende do
+domínio próprio da API e do painel publicado no mesmo site (ver "Implementação" abaixo)
 **Área:** Segurança / Autenticação do Painel Admin (frontend web + backend)
 
 ---
@@ -1211,6 +1212,9 @@ o cookie automaticamente.
 - `/auth/refresh`: lê o refresh do **cookie**, não do corpo. `/auth/logout`: expira o cookie.
 - Access token continua no corpo JSON (guardado só em memória pelo cliente).
 
+> Na implementação (05/11/2026) o cookie saiu em rotas próprias do painel, para não mudar o
+> contrato do app, e com o prefixo `__Host-`, que exige `Path=/`. Ver "Implementação".
+
 ---
 
 ### Restrição de arquitetura (decisiva para a implementação)
@@ -1241,6 +1245,51 @@ adicionar defesa CSRF (double-submit token ou header custom exigido).
   conflitar no `SecurityConfig`** — duas frentes editando auth ao mesmo tempo colidem.
 - Depende de definição de deploy (mesmo domínio registrável **ou** BFF/proxy) antes de valer
   em produção; sem isso, cai no bloqueio de cookie cross-site.
+
+---
+
+### Implementação (05/11/2026, SEG-05)
+
+**Backend.** Rotas novas só do painel, sem mexer em `/auth/login`, `/auth/refresh` e
+`/auth/logout` do app (`PainelAuthController`):
+
+- `POST /api/v1/auth/painel/login` — só o papel `ADMIN`. Conta de outro papel recebe o mesmo
+  401 de senha errada (a conferência do papel vem logo depois da senha, antes de "conta
+  desativada" e "e-mail não confirmado", para não revelar nada). Corpo com `accessToken`,
+  `expiraEm` e `usuario`, **sem** `refreshToken`.
+- `POST /api/v1/auth/painel/refresh` — lê o refresh do cookie, com a mesma rotação e blacklist
+  por `jti` do fluxo do app; a conta precisa continuar `ADMIN`. Sem cookie: 401.
+- `POST /api/v1/auth/painel/logout` — revoga o refresh do cookie na blacklist e apaga o cookie
+  (`Max-Age=0`). Idempotente.
+- Cookie: `__Host-painel_refresh=…; Path=/; Max-Age=<validade do refresh, 30 dias>; Secure;
+  HttpOnly; SameSite=Strict`, sem `Domain` (o prefixo `__Host-` obriga isso no navegador).
+- **CSRF:** `PainelCsrfFilter`, logo depois do CORS, exige nas três rotas o cabeçalho `Origin`
+  igual, caractere a caractere, à origem configurada do painel e `X-Requested-With: painel`;
+  senão 403 `ACESSO_NEGADO`. Requisição sem `Origin` também é recusada.
+- **CORS:** `allowCredentials(true)` só em `/api/v1/auth/painel/**` e só para a origem do painel
+  (`app.cors.painel-origin` / env `APP_CORS_PAINEL_ORIGIN`, padrão `http://localhost:4200`),
+  validada no startup (uma origem exata, sem `*`, lista nem caminho). O resto da API continua sem
+  credenciais e com `APP_CORS_ALLOWED_ORIGINS`.
+
+**Painel.** O access token fica num signal do `TokenStorage` (memória); o `sessionStorage` guarda
+só o usuário (nome, e-mail, papel) e as chaves de token de versões anteriores são apagadas ao
+abrir. Login, refresh e logout vão pelas rotas novas com `withCredentials` e
+`X-Requested-With: painel`. Ao abrir ou recarregar a aba, o guard de rota chama
+`/painel/refresh` antes de mandar ao login. Em 401 o interceptor renova uma vez (renovações
+simultâneas viram uma chamada só) e repete a requisição; 401 de novo sobe sem nova renovação.
+Se a renovação falha, a aba encerra só a própria sessão, sem chamar o logout do servidor: as
+abas dividem o cookie, e um logout ali revogaria o refresh que outra aba acabou de renovar. Só
+o botão Sair pede ao backend que revogue e apague o cookie.
+
+**Dependência para valer em produção.** `SameSite=Strict` não deixa o navegador guardar nem
+mandar o cookie entre sites diferentes. `run.app` está na Public Suffix List, então cada serviço
+do Cloud Run é um site à parte: com a API em `…run.app`, o painel em outro endereço (inclusive o
+`ng serve` em `localhost:4200` falando com a API de dev) faz login e trabalha por até 15 min, mas
+**não recupera a sessão ao recarregar a aba nem renova o access token**. O funcionamento completo
+depende do item 3 do guia de pendências (domínio próprio da API) e do painel publicado no mesmo
+site registrável (ex. `admin.` e `api.` do mesmo domínio), com `APP_CORS_PAINEL_ORIGIN` apontando
+para a origem do painel. Para testar o fluxo inteiro antes disso: backend e painel locais
+(`localhost:8080` e `localhost:4200` são o mesmo site; o navegador aceita `Secure` em `localhost`).
 
 ---
 
@@ -1333,6 +1382,51 @@ carga), com o banco subindo de plano (Flex → M10 → M20) só quando a mediç�
 
 ---
 
+## ADR-017: Catálogo de estabelecimentos por estado (UF) para o lançamento nacional
+
+**Data:** 2026-11-13
+**Status:** Aceito — desenho e decisões D1–D7 aprovados pelo PO em 13/11/2026; implementação não iniciada
+**Área:** Backend, App e Painel Admin
+**Desenho completo:** [`02-arquitetura-tecnica/Desenho-Hospitais-por-Estado-v1.0.md`](../02-arquitetura-tecnica/Desenho-Hospitais-por-Estado-v1.0.md)
+
+### Contexto e Problema
+
+O lançamento fora do DF usa o CNES/DATASUS. Só os públicos e ativos, nos tipos que o app já
+trata, são 60.086 estabelecimentos (26,5 MB em JSON); só hospitais e urgência, 5.002 (2,2 MB).
+Hoje o catálogo, os indicadores e o ranking leem todos os ativos, e o app guarda o catálogo
+numa única chave do AsyncStorage. O PO quer que cada pessoa veja o seu estado e que o app seja
+liberado estado a estado.
+
+### Opções Avaliadas
+
+**Opção 1 — Catálogo por UF** ← Proposta
+- O servidor filtra catálogo, indicadores e ranking por `uf`; a configuração remota lista as UFs
+  liberadas e a versão de cada catálogo; o app guarda a UF escolhida, a UF onde está e a vizinha
+  perto da divisa, e o geofencing usa a união delas.
+
+**Opção 2 — Catálogo nacional único, filtro só na tela**
+- Descartada: o PO decidiu em 13/11/2026 que as UBS entram, e com elas o catálogo nacional (26,5 MB)
+  não cabe no aparelho.
+
+**Opção 3 — Catálogo por proximidade**
+- Descartada: volta um pedido por deslocamento, sem cache, com a posição exata no servidor (o
+  que o ARQ-01 eliminou).
+
+### Decisão
+
+Opção 1, em cinco fases, com GO como segunda UF, UBS no escopo, privados fora, UF descoberta pela
+malha do IBGE no aparelho e guardada só nele, e sem registro de visita em UF não liberada. Sem `uf`, as rotas continuam devolvendo só o DF,
+para os APKs já instalados.
+
+### Consequências
+
+- O check-in não muda: continua por `$geoIntersects` em qualquer UF.
+- O ranking deixa de carregar todos os ativos a cada pedido.
+- O catálogo no app sai do AsyncStorage para um arquivo por UF, e o mapa ganha agrupamento de
+  marcadores (SP e MG passam de 7 mil pontos).
+
+---
+
 ## Resumo de Status
 
 | ADR | Título | Prioridade | Esforço | Impacto |
@@ -1349,11 +1443,12 @@ carga), com o banco subindo de plano (Flex → M10 → M20) só quando a mediç�
 | ADR-010 | Migração Incremental para TypeScript | Alta | Alto (incremental) | Alto |
 | ADR-011 | Hospedagem do backend no Google Cloud Run | Crítica | Concluído em 04/09/2026 | Alto |
 | ADR-012 | Painel Admin em Angular 21 (SPA separada) | Média | Em andamento (24/09/2026) | Alto |
-| ADR-013 | Refresh token em cookie HttpOnly (Painel Web) | Alta | Pendente (dir. aceita 25/09/2026) | Alto |
+| ADR-013 | Refresh token em cookie HttpOnly (Painel Web) | Alta | Implementado (05/11/2026; produção depende do domínio próprio) | Alto |
 | ADR-014 | Leaflet para o mapa do Painel Admin | Média | Em andamento (25/09/2026) | Médio |
 | ADR-015 | Escala da infraestrutura para a população do DF | Alta | Proposto (08/10/2026) | Alto |
+| ADR-017 | Catálogo de estabelecimentos por UF (lançamento nacional) | Alta | Aceito (13/11/2026), não iniciado | Alto |
 
 > Os ADR-001 a ADR-010 continuam `Proposto`. **`Aceito`: ADR-011** (infraestrutura,
-> backend), **ADR-012** (frontend do painel admin), **ADR-013** (segurança de sessão do
-> painel web — direção aceita, implementação sequenciada após o backend de inativos) e
-> **ADR-014** (biblioteca de mapa do painel).
+> backend), **ADR-012** (frontend do painel admin) e **ADR-014** (biblioteca de mapa do
+> painel). **`Implementado`: ADR-013** (segurança de sessão do painel web, 05/11/2026; em
+> produção depende do domínio próprio da API e do painel no mesmo site).

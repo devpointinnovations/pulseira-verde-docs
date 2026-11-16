@@ -3647,9 +3647,362 @@ avaliação continua bem dentro dos 90 dias em que fica ligada à conta (DAD-01 
 
 ---
 
-## M-069 — Um repositório por área na conta devpointinnovations
+## M-069 — Crash reporting no app: os erros que ninguém via passam a chegar ao Sentry
 
-**Data:** 29/10/2026 · **PRs:** painel-admin-frontend #1, radar-saude-backend #1, radar-saude-mobile #1 e o PR deste registro no radar-saude-docs · **Origem:** pedido do PO ("cada setor terá seu repositório próprio")
+**Data:** 28/10/2026 · **PR:** (este PR) · **Origem:** E8-07 / OPS-03, item 2 do guia de pendências de 25/10/2026
+
+### Como era
+
+- Nenhuma ferramenta de crash reporting no app. O crash do PR #46 e o ANR do BUG-04 só foram
+  descobertos porque alguém contou, e sem a pilha de chamadas nem o modelo do aparelho.
+- As tarefas de segundo plano (geofencing, sinal da visita, agendamento do feedback) tratavam a
+  falha com um `console.warn`, que ninguém lê num aparelho de usuário.
+
+### O que mudou
+
+- **App:** `@sentry/react-native` 7.11 (versão indicada pelo Expo 55). O novo
+  `src/config/monitoramento.js` liga o Sentry só quando há `EXPO_PUBLIC_SENTRY_DSN`, então dev
+  local e testes seguem sem enviar nada. O `index.js` importa `src/config/iniciarMonitoramento.js`
+  antes dos outros módulos do app (os `import` sobem para o topo do arquivo, e uma chamada no corpo
+  só rodaria depois de `App` e do geofencing já carregados), o que cobre também o erro no
+  carregamento dos módulos e o processo que o SO acorda só para a tarefa de geofencing.
+- **Sem dado pessoal (LGPD art. 11):** antes de qualquer envio, o app deixa do usuário só o código
+  aleatório que o Sentry cria na instalação (conta em quantos aparelhos o erro aconteceu, como diz
+  a política), reduz a requisição a método e rota sem query string, apaga campos de posição,
+  e-mail, nome, telefone, token e identificador do aparelho em qualquer nível e troca JWT,
+  `Bearer`, e-mail e coordenada com 4 ou mais casas decimais, no texto e em número. Sem
+  `sendDefaultPii`, captura de tela, replay nem tracing.
+- **Erros nativos** (crash em Java/Kotlin, ANR) são montados pelo SDK nativo e não passam pelo
+  `beforeSend` em JavaScript. O `LimpezaSentry.kt` aplica a mesma limpeza do lado nativo, nas duas
+  filas de processamento do SDK (a comum e a do ANR da sessão anterior, lido na abertura
+  seguinte); o JS o instala no `onReady` do `Sentry.init`, depois que o SDK nativo liga.
+- **Erros silenciosos:** os sete `catch` que só escreviam no console nas tarefas de segundo plano
+  passam a registrar o erro, com o local como tag. Não são enviados: falha de rede, item da fila
+  offline, resposta HTTP de erro (5xx o backend registra, 401 é sessão vencida, e os 4xx são
+  recusas de negócio esperadas, como a posição fora do geofence que a região nativa maior do
+  BUG-08 provoca de propósito) e as recusas do Android que o app contorna (serviço em primeiro
+  plano com o app em segundo plano no Android 12+, permissão de localização revogada). O 400 com
+  campo reprovado, que é payload montado errado pelo app, continua indo. O resto gastaria a cota
+  de 5 mil erros por mês do plano gratuito.
+- **Build:** `android/app/build.gradle` aplica o `sentry.gradle` à mão (o projeto não usa
+  `expo prebuild`), que envia o mapa de código no build de release, e só quando token, org e
+  projeto estão no ambiente: faltando qualquer um, no CI ou na máquina de quem roda um release
+  local, o build sai igual ao de antes. O `metro.config.js` usa o `getSentryExpoConfig`, que grava
+  um Debug ID no bundle e no mapa, e o Sentry casa um com o outro sem depender de release e dist
+  baterem. O `cd-mobile-apk.yml` recebe quatro secrets opcionais (`EXPO_PUBLIC_SENTRY_DSN`,
+  `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`) e o ambiente (`EXPO_PUBLIC_AMBIENTE`).
+- **Política de privacidade** (`site/`, versão 1.2): Sentry como operador, a transferência
+  internacional (EUA), a base legal (legítimo interesse) e o prazo de até 90 dias.
+
+### O que ficou de fora
+
+- Painel `admin/`: sem deploy hoje, o Sentry dele só pegaria erros de quem roda o painel na
+  própria máquina. Entra quando o painel for publicado.
+- Backend: o Error Reporting do Google Cloud lê as exceções do log, e depende do log estruturado
+  (OPS-02, item 11 do guia).
+- Validação: o E8-07 fica parcial até um erro forçado no APK de homologação aparecer no Sentry com
+  a linha do código e sem dado pessoal.
+
+---
+
+## M-070 — Sinal e saída da visita deixam de ser recusados com a sessão vencida; entrada sem internet ganha saída
+
+**Data:** 04/11/2026 · **PR:** (este PR) · **Origem:** teste de campo do PO no Hospital Regional de Ceilândia (29/10/2026, APK da rc.10)
+
+### Como era
+
+- O Histórico mostrou de novo a visita automática como **GPS interrompido** com **0 min**, já com o
+  M-068 no aparelho. O PO entrou, fez login no Wi-Fi do hospital, a entrada foi registrada, e na
+  saída o Wi-Fi caiu sem dados móveis; a internet voltou mais de 10 min depois.
+- **Dados de homologação (consulta só leitura ao banco e aos logs do Cloud Run, 04/11/2026):** as
+  visitas de 23/10 e 29/10 nesse hospital têm saída = entrada, nenhum ponto amostral e o último sinal
+  igual à entrada. O check-in chegou **com internet** (201). Nenhum checkout chegou. A única chamada
+  depois do check-in foi um heartbeat ~41 min depois, recusado com **403**, e logo em seguida o app
+  renovou a sessão (`/auth/refresh` 200). Nos dois dias o 403 veio antes da renovação.
+- **Causa do 403:** o access token dura 15 min, e o app só renovava ao receber 401. As rotas de visita
+  aceitam quem não fez login (OPS-03): com o token vencido, o filtro JWT segue sem usuário e a visita
+  do usuário logado responde 403 ("não é sua"), nunca 401. Sinal e checkout de toda visita
+  automática com mais de 15 min, feitos sem o app aberto renovando antes, eram recusados; na fila
+  offline, o checkout recusado (4xx) era descartado.
+- **Também no código:** a entrada confirmada sem internet ia para a fila sem o aparelho guardar a
+  visita, então a saída não gerava checkout nem o sinal saía depois que a fila entregava a entrada.
+  Era a lacuna que o M-068 deixou de fora.
+- Não explicado pelos dados do servidor: por que nenhum sinal chegou nos primeiros 15 min (com o
+  token ainda válido). Pode ter sido a saída logo depois da entrada, já sem internet, ou o
+  acompanhamento em segundo plano não ter ligado. O Sentry da rc.11 (M-069) registra
+  `geofencing.acompanhamento` e `geofencing.sinalVisita` e deve responder no próximo teste.
+
+### O que mudou (só app)
+
+- **Renovação antes do pedido** (`core/api/apiClient.js`): o app lê o `exp` do access token e, se
+  ele já venceu (ou vence em menos de 1 min) e há refresh token, renova a sessão antes de enviar.
+  Vale para todos os pedidos, inclusive os das tarefas de segundo plano. Sem internet para renovar,
+  o pedido falha com o erro de conexão, e o checkout vai para a fila como antes.
+- **Visita provisória:** com o check-in na fila, o geofencing guarda uma visita provisória com a
+  chave do item na fila e o mesmo horário dele. Ela mantém o acompanhamento ligado no modo de visita,
+  então a saída é vista pelo Exit do SO ou pela posição da leitura. Não manda sinal (o servidor ainda
+  não a conhece), não é apagada quando o servidor responde que não há visita ativa e some depois de
+  24h, a validade da fila.
+- **Saída na fila atrás da entrada:** a saída da provisória vai para a fila com o horário real
+  (`ocorridoEm`), ligada à chave da entrada. O `SincronizacaoOffline` envia o check-in, grava o
+  número devolvido na saída que o espera (também no disco) e envia a saída logo em seguida. Entrada
+  recusada leva a saída junto. Sem a entrada na fila, a saída só usa a visita aberta da mesma
+  unidade que começou antes dela.
+- **Geofencing avisado:** com a pessoa ainda no hospital, a provisória ganha o número da visita e
+  passa a mandar sinal; com a saída já na fila, é esquecida; a saída entregue agenda o convite de
+  feedback com a duração do servidor.
+- **Uma chave por entrada** na fila (`checkin:<hospital>:<instante>`) e **fila em série** (leituras e
+  escritas em disco uma de cada vez).
+- Backend sem mudança.
+
+### O que ficou de fora
+
+- O backend continua respondendo 403, e não 401, a um token vencido numa rota pública de visita. Com
+  a renovação antes do pedido o app não depende mais disso; responder 401 quando há cabeçalho
+  `Authorization` inválido é uma melhoria possível do lado do servidor.
+- Sinal da visita sem internet continua sem fila: a saída com o horário real já corrige a visita que
+  o job encerrou (M-068). Caso que sobra: mais de 45 min no hospital sem internet e reconectar ainda
+  lá dentro (o primeiro sinal recebe 409 e o app esquece a visita).
+- Precisa de teste de campo com o APK novo: visita automática de mais de 15 min com o app fechado,
+  saída sem internet e reconexão depois. O esperado é a visita como Finalizada com o tempo real.
+
+---
+
+## M-071 — Mapa volta para MapLibre, sem cobrança por usuário ativo
+
+**Data:** 09/11/2026 · **PR:** (este PR) · **Origem:** pedido do PO; decisão D3 do `Plano-Escala-Infraestrutura-DF-v1.0` e P6 da `Analise-Escalabilidade-Seguranca-DF-v1.0`
+
+### Como era
+
+- O mapa do app usava `@rnmapbox/maps` v10 com o estilo `Street` da conta Mapbox, e a Web usava
+  `mapbox-gl` v2 atrás do adaptador `utils/mapkit`. O Mapbox cobra por usuário ativo do SDK: na
+  conta do plano de escala, +~US$ 500/mês na fase P2 e +~US$ 4.700/mês na P4, mais que todo o resto
+  da infraestrutura somado.
+- O build dependia do Maven privado da Mapbox em `android/build.gradle` e do segredo
+  `EXPO_PUBLIC_MAPBOX_TOKEN`. Sem o token o APK saía com o mapa em branco.
+- A Web criava o mapa com `attributionControl: false`.
+
+### O que mudou (só app e pipeline do APK)
+
+- **Bibliotecas:** `@maplibre/maplibre-react-native` v11 (Fabric, SDK nativo no Maven Central, sem
+  token) e `maplibre-gl` v5 na Web. A v5 e não a 6: a 6 é só ESM e carrega o worker por
+  `import.meta.url`, que o bundler Web do Metro não resolve.
+- **Tiles:** estilo vetorial Liberty do OpenFreeMap (`src/utils/mapStyle.js`, `MAP_STYLE`), gratuito,
+  sem chave e sem limite de acessos, mas sem SLA. Se o provedor cair, o mapa fica sem fundo e
+  marcadores, geofences e lista seguem funcionando. `mapStyle.web.js` deixou de existir: sem token,
+  o arquivo é o mesmo nas duas plataformas.
+- **Adaptador nativo** (`src/utils/mapkit/index.js`): a v11 renomeou a API (`Map`, `GeoJSONSource`,
+  `Layer`, `Marker`, câmera por `setStop`). O adaptador mantém o que as telas usam (`MapView`,
+  `Camera.setCamera`/`fitBounds`, `ShapeSource`, `FillLayer`, `LineLayer`, `MarkerView`), então
+  GeoLocalizacaoScreen e HospitalDetalheScreen só trocam o nome da constante do estilo. A câmera
+  entra pela posição inicial e só se move com um centro ou zoom NOVO nas props, para uma leitura de
+  GPS não desfazer o zoom do usuário. Falha do módulo nativo vira aviso no console, não exceção.
+- **Atribuição:** ligada nos dois lados (OpenStreetMap/OpenMapTiles, exigida pelo provedor). Na Web
+  fica compacta, aberta no começo e recolhida ao mexer no mapa.
+- **Build e CI:** sai o Maven privado da Mapbox do `android/build.gradle`. Sai
+  `EXPO_PUBLIC_MAPBOX_TOKEN` do `cd-mobile-apk.yml` e da tabela de secrets do MANUAL (§4.3). O
+  AndroidManifest versionado não muda: a biblioteca só declara `INTERNET` e localização, que o app
+  já tem.
+- **Testes:** novo `mapkit.test.js` com o contrato do adaptador nativo (conversão da câmera,
+  `fitBounds` em `[oeste, sul, leste, norte]`, toque com `features`, `paint` das camadas). As telas
+  passam a mockar o próprio `utils/mapkit`, não a biblioteca.
+- **Validado na Web** (export do Expo + Playwright, API e estilo simulados porque o proxy da nuvem
+  não alcança o OpenFreeMap): marcadores, toque abrindo o card, filtro de 1 km sem zoom máximo
+  (M-064), geofence no Detalhe do Hospital e atribuição.
+
+### O que ficou de fora
+
+- **Teste no aparelho:** o APK DEV precisa ser conferido em campo (mapa com tiles reais, toque no
+  geofence, marcadores, voltar do detalhe). A API nativa da v11 só roda no aparelho.
+- **PMTiles próprio:** antes da fase P2, servir um recorte do DF pelo saudemonitor.dev (Cloudflare
+  R2) e trocar só a URL de `MAP_STYLE`. O MapLibre nativo lê `pmtiles://` desde a 11.7 (a
+  biblioteca traz a 13.6.1); na Web é preciso registrar o protocolo com o pacote `pmtiles`.
+- O segredo `EXPO_PUBLIC_MAPBOX_TOKEN` pode ser apagado do repositório depois do merge, e a conta
+  Mapbox encerrada.
+
+---
+
+## M-072 — Teste do teto por IP deixa de falhar na virada do minuto
+
+**Data:** 09/11/2026 · **PR:** (este PR) · **Origem:** CI do PR #246 (promoção da v1.0.0-rc.12)
+
+### Como era
+
+- O job Backend do PR #246 falhou em `RateLimitFilterTest.tetoPorIpBarraQuemTrocaDeInstalacaoACadaChamada`
+  e passou ao ser executado de novo, sem mudança de código.
+- O `RateLimitService` conta numa janela fixa de 1 minuto alinhada ao relógio do sistema
+  (`System.currentTimeMillis()`). O teste faz 100 chamadas aceitas e espera 429 na 101ª. No CI as
+  chamadas levaram segundos e atravessaram a virada do minuto (a falha é das 19:35:00): o contador
+  zerou e a 101ª passou.
+
+### O que mudou (só backend, sem mudança de comportamento em produção)
+
+- `RateLimitService` recebe o relógio em milissegundos (`LongSupplier`) por um construtor de pacote.
+  O construtor público, o que o Spring usa, passa `System::currentTimeMillis`, como antes.
+- O `RateLimitFilterTest` inteiro usa um relógio parado (`RELOGIO_PARADO`): os outros testes com 60 a 100 chamadas pelo MockMvc tinham o mesmo risco.
+- Novo teste `contadorRecomecaQuandoAJanelaDeUmMinutoVira`: com o relógio no último milissegundo da
+  janela, a 11ª chamada de autenticação é barrada; um milissegundo depois, volta a passar.
+## M-073 — Painel admin sem token no `sessionStorage`: refresh em cookie `HttpOnly` (ADR-013, SEG-05)
+
+**Data:** 05/11/2026 · **PR:** (este PR) · **Origem:** ADR-013 (aceito pelo PO em 25/09/2026) e gap SEG-05 da Análise de Escalabilidade e Segurança
+
+### Como era
+
+- O painel guardava access e refresh token no `sessionStorage` (`token-storage.ts`). Um XSS no
+  painel lia os dois e, com o refresh de 30 dias, mantinha a sessão de um administrador, que edita
+  hospitais e geofences.
+- O painel usava o login e o refresh do app, com o refresh no corpo, e o logout do painel só
+  limpava a aba: o refresh não era revogado no servidor.
+
+### O que mudou
+
+- **Backend:** rotas novas só do painel, `POST /api/v1/auth/painel/login`, `/refresh` e `/logout`.
+  O login aceita só `ADMIN` (conta de outro papel recebe o mesmo 401 de senha errada). O refresh
+  sai só no cookie `__Host-painel_refresh` (`Secure`, `HttpOnly`, `SameSite=Strict`, `Path=/`,
+  `Max-Age` de 30 dias), com a mesma rotação e blacklist por `jti` do app; o logout revoga e apaga
+  o cookie. Contrato do app sem mudança.
+- **CSRF:** o `PainelCsrfFilter` exige nessas rotas o `Origin` exatamente igual ao do painel e
+  `X-Requested-With: painel` (403 sem eles). Antes não havia rota que lesse cookie, e o comentário
+  do `SecurityConfig` já avisava que a defesa CSRF seria obrigatória quando houvesse.
+- **CORS:** credenciais só em `/api/v1/auth/painel/**` e só para a origem do painel, nova
+  propriedade `app.cors.painel-origin` (`APP_CORS_PAINEL_ORIGIN`), conferida no startup (uma
+  origem exata, sem `*`).
+- **Painel:** access token só em memória (signal), só o usuário no `sessionStorage`, as chaves de
+  token antigas apagadas ao abrir; o guard recupera a sessão pelo cookie ao abrir ou recarregar a
+  aba; o interceptor deixa de ler refresh do storage e renova uma vez em 401; o logout revoga no
+  servidor.
+
+### O que ficou de fora
+
+- **Funcionamento em produção depende do domínio próprio da API** e do painel publicado no mesmo
+  site. `run.app` é sufixo público: com `SameSite=Strict`, o navegador não guarda o cookie entre
+  dois serviços do Cloud Run, nem entre `localhost:4200` e a API de dev. Até lá o painel faz login,
+  mas volta ao login ao recarregar a aba e quando o access token de 15 min vence.
+- CSP estrita no painel (citada no SEG-05) não entrou: o painel ainda não tem hospedagem onde
+  definir os cabeçalhos.
+
+---
+
+## M-074 — Projeto passa a se chamar Pulseira Verde
+
+**Data:** 11/11/2026 · **PR:** (este PR) · **Origem:** pedido do PO em 11/11/2026
+
+### Como era
+
+- O app, o painel, o site e a documentação usavam o nome "Radar Saúde". A marca RADAR SAÚDE é
+  registro em vigor de terceiro no INPI (nº 928495230, classe 42, software), e o domínio
+  radarsaude.com.br é da mesma empresa. Lançar com esse nome expunha o app a notificação e a pedido
+  de remoção na loja.
+
+### O que mudou
+
+- **Nome de exibição** trocado para "Pulseira Verde" (a cor da triagem de UPA e pronto-socorro
+  para casos leves, o público do app) no app (nome do aparelho por flavor DEV/HML/prod, telas de
+  login, recuperação de senha, confirmação de e-mail, atualização obrigatória, privacidade, perfil,
+  título da notificação e aviso de localização em segundo plano), no painel admin, na mensagem de
+  manutenção do backend, nas páginas do site `saudemonitor.dev`, nos títulos das GitHub Releases,
+  nos nomes de projeto do Sonar, no `perf/` e na documentação ativa. O nome é tratado no feminino
+  ("a Pulseira Verde").
+- **Sem mudança técnica:** pacote Android `com.gabrielvogado.saudemonitor`, pacote Java
+  `br.com.saude_monitor`, coleções do Mongo, serviços do Cloud Run, domínio `saudemonitor.dev`,
+  Worker `radar-saude-site`, nome do arquivo `logo-radar-saude.png` e o domínio fictício
+  `radarsaude.invalid` da massa de dados. Trocá-los não muda nada para o usuário e quebraria
+  deploys e vínculos.
+- Registros históricos (homologações já publicadas, entradas antigas deste histórico, relatório de
+  desempenho de 23/09 e revisões antigas do índice) ficam com o nome da época.
+
+### O que ficou de fora
+
+- Ícone e logo continuam os atuais (pin com cruz); trocar para uma pulseira é decisão de design.
+- Registro do domínio pulseiraverde.com.br e depósito da marca no INPI (classes 9, 42 e 44) são
+  passos do PO. Pesquisa de disponibilidade em 11/11/2026: nenhum processo no INPI, .com.br e
+  .dev livres, nenhum app com o nome na Play.
+- O site precisa ser republicado (wrangler) para o novo nome aparecer em `saudemonitor.dev`.
+
+---
+
+## M-075 — Fila offline enviada com o app fechado, a cada ~15 min
+
+**Data:** 11/11/2026 · **PR:** (este PR) · **Origem:** decisão do PO em 04/11/2026 (PR separado do
+M-070, depois do teste de campo), liberada em 11/11/2026 com o teste de campo do M-070 positivo
+
+### Como era
+
+- A fila offline (check-in e checkout guardados sem internet) só saía com o app aberto, na volta da
+  conexão com o app em uso, ou quando o SO acordava o app para o geofencing (entrada, saída ou
+  leitura do acompanhamento, M-068).
+- Depois que a visita termina, o acompanhamento desliga. Quem saía do hospital sem internet e não
+  passava perto de outro ponto monitorado ficava com a saída guardada no aparelho até abrir o app; a
+  visita aparecia como GPS interrompido até lá.
+
+### O que mudou (só app)
+
+- Nova tarefa de segundo plano `saude-monitor-envio-fila` (`services/EnvioFilaSegundoPlano.js`,
+  dependência `expo-background-task`, que usa o WorkManager no Android e o BGTaskScheduler no iOS).
+  O SO a executa a cada ~15 min (o mínimo do Android), podendo atrasar para poupar bateria.
+- Com a fila vazia, a rodada só lê o armazenamento local e termina, sem rede. Com itens, chama a
+  mesma sincronização do app aberto (`SincronizacaoOffline`), então a renovação do token (M-070), a
+  ordem entrada antes da saída e o aviso ao geofencing valem igual.
+- A tarefa é definida no carregamento do bundle (`index.js`, depois do geofencing) e registrada uma
+  vez; as aberturas seguintes não a registram de novo, para não reiniciar o intervalo. No navegador
+  não existe. Falhas vão para o Sentry com `fila.segundoPlano` e `fila.registroSegundoPlano`.
+- **Nativo sem prebuild:** o APK é gerado do `frontend/android/` versionado. O módulo entra pelo
+  autolinking do Expo no build do Gradle, e o manifesto do WorkManager é fundido pela própria
+  biblioteca; nada foi editado à mão no `AndroidManifest.xml`. O plugin no `app.json` só vale para o
+  iOS (modo `processing` no `Info.plist`) quando houver build iOS.
+
+### O que ficou de fora
+
+- Sinal da visita sem internet continua sem fila (ver M-070).
+- Precisa de teste no aparelho com o APK de desenvolvimento: sair do hospital sem internet, fechar o
+  app, recuperar a internet longe de outro hospital e, sem abrir o app, conferir no painel ou no
+  banco que a visita fechou com o horário real em até ~15 a 30 min.
+
+---
+
+## M-076 — Chave do JWT com rotação por `kid` (SEG-04)
+
+**Data:** 11/11/2026 · **PR:** (este PR) · **Origem:** SEG-04 da Análise de Escalabilidade, Segurança e Custo (item 8 das pendências do guia técnico de 25/10/2026)
+
+### Como era
+
+- Todos os tokens (access de 15 min e refresh de 30 dias) eram assinados com uma chave só
+  (`JWT_SECRET`), sem identificador no cabeçalho (`JwtService`: `Keys.hmacShaKeyFor(secret)`).
+- Se a chave vazasse, dava para fabricar token de qualquer conta, inclusive admin. Trocar a chave
+  invalidava todas as sessões de uma vez, então na prática ela nunca seria trocada.
+
+### O que mudou (só backend)
+
+- **Chaves com `kid`:** `JwtProperties` ganha `chaves` (`JWT_CHAVES`, JSON `{"kid": "segredo"}`) e
+  `chaveAtiva` (`JWT_CHAVE_ATIVA`). O token novo leva no cabeçalho o `kid` da chave ativa; a
+  validação escolhe a chave pelo `kid` (`ChavesJwt`, um `keyLocator` do jjwt) e aceita as chaves
+  antigas ainda publicadas. `kid` desconhecido é token inválido, mesmo com assinatura de outra chave
+  conhecida.
+- **Transição:** `JWT_SECRET` vira a chave legada, sem `kid`. Ela assina enquanto não houver chave
+  ativa (o comportamento de antes, que continua valendo nos ambientes até a primeira rotação) e
+  valida os tokens sem `kid`. Sem ela configurada, token sem `kid` é recusado.
+- **Boot:** chave com menos de 32 bytes, JSON inválido, `kid` fora de `[A-Za-z0-9._-]{1,64}`, chave
+  ativa fora do mapa ou nenhuma chave para assinar derrubam a aplicação, como no SEG-07. As
+  mensagens citam o `kid`, nunca o segredo. As chaves chegam como texto JSON, e não como mapa no
+  bind do Spring, porque a falha de conversão do bind imprime o valor (com os segredos) no log.
+- **Procedimento** em `deploy/google/README.md`: publicar a chave nova sem ativar, ativar no deploy
+  seguinte, retirar a antiga depois de 30 dias (a validade do refresh).
+- HMAC continua: assimétrico (RS256/ES256) só faz falta quando alguém além do próprio backend
+  validar os tokens (opção B da análise).
+
+### O que ficou de fora
+
+- A primeira rotação nos ambientes: criar `JWT_CHAVES` e `JWT_CHAVE_ATIVA` (com os sufixos `_HOM` e
+  `_PROD`) no Secret Manager e incluir as linhas no `cd-backend-google.yml`. Incluir antes de os
+  secrets existirem derrubaria o deploy.
+- Retirar a chave legada: depois de 30 dias com chave ativa em todos os ambientes, um PR que tira
+  `JWT_SECRET` do workflow e o valor padrão de desenvolvimento de `app.jwt.secret`.
+
+---
+
+## M-077 — Um repositório por área na conta devpointinnovations
+
+**Data:** 29/10/2026 (cópia inicial) e 16/11/2026 (sincronização) · **PRs:** painel-admin-frontend #1, radar-saude-backend #1, radar-saude-mobile #1 e o PR deste registro no radar-saude-docs · **Origem:** pedido do PO ("cada setor terá seu repositório próprio")
 
 ### Como era
 
@@ -3660,8 +4013,11 @@ avaliação continua bem dentro dos 90 dias em que fica ligada à conta (DAD-01 
 ### O que mudou
 
 - Quatro repositórios públicos em devpointinnovations, com o histórico de cada pasta preservado
-  (`develop`, `master` e as tags `v1.0.0-rc.1` a `rc.10`) e os commits antigos do Claude
+  (`develop`, `master` e as tags `v1.0.0-rc.1` a `rc.16`) e os commits antigos do Claude
   reescritos no nome do PO, sem as linhas de sessão.
+- A sincronização de 16/11 repetiu o mesmo filtro da cópia de 29/10 sobre o monorepo atual: a
+  rc.10 gerada de novo tem o mesmo hash da que já estava em cada repositório, então a `develop`,
+  a `master` e as tags rc.11 a rc.16 entraram por fast-forward, sem reescrever nada publicado.
 - CI por área, trava de contagem com uma área só e rulesets exigindo o check da área.
 - Homologação por repositório: rc do backend a partir do `build.gradle` (`version = '1.0.0'`),
   rc do app a partir do `app.json`; backend promovido antes do app quando há dependência.
@@ -3672,8 +4028,9 @@ avaliação continua bem dentro dos 90 dias em que fica ligada à conta (DAD-01 
 ### O que ficou de fora
 
 - Passos de conta do PO: segredos do Actions, projetos no SonarQube Cloud, comandos `gcloud`
-  do WIF, rulesets, branch padrão `develop` e remoção da `main` de cada repositório.
-- Releases com os APKs das rc 1 a 10, issues e PRs ficam no repositório antigo.
+  do WIF, rulesets, Code Scanning.
+- Enquanto o monorepo continuar sendo o repositório ativo, cada merge nele precisa de uma nova
+  sincronização para chegar aos repositórios da org.
+- Releases com os APKs das rc 1 a 16, issues e PRs ficam no repositório antigo.
 - Os documentos antigos continuam citando `frontend/`, `backend/` e PRs `#N` do monorepo; a
   nota do índice explica a correspondência em vez de reescrever cada caminho.
-
