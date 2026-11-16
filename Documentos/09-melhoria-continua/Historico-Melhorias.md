@@ -3997,3 +3997,40 @@ M-070, depois do teste de campo), liberada em 11/11/2026 com o teste de campo do
   secrets existirem derrubaria o deploy.
 - Retirar a chave legada: depois de 30 dias com chave ativa em todos os ambientes, um PR que tira
   `JWT_SECRET` do workflow e o valor padrão de desenvolvimento de `app.jwt.secret`.
+
+---
+
+## M-077 — Um repositório por área na conta devpointinnovations
+
+**Data:** 29/10/2026 (cópia inicial) e 16/11/2026 (sincronização) · **PRs:** painel-admin-frontend #1, radar-saude-backend #1, radar-saude-mobile #1 e o PR deste registro no radar-saude-docs · **Origem:** pedido do PO ("cada setor terá seu repositório próprio")
+
+### Como era
+
+- Um monorepo (`GabrielVogado/saude-monitor`) com app, painel, backend, documentação e site.
+  Cada PR rodava o CI das três áreas de código, e um merge na `master` gerava uma rc única com
+  o APK e o backend de homologação juntos.
+
+### O que mudou
+
+- Quatro repositórios públicos em devpointinnovations, com o histórico de cada pasta preservado
+  (`develop`, `master` e as tags `v1.0.0-rc.1` a `rc.16`) e os commits antigos do Claude
+  reescritos no nome do PO, sem as linhas de sessão.
+- A sincronização de 16/11 repetiu o mesmo filtro da cópia de 29/10 sobre o monorepo atual: a
+  rc.10 gerada de novo tem o mesmo hash da que já estava em cada repositório, então a `develop`,
+  a `master` e as tags rc.11 a rc.16 entraram por fast-forward, sem reescrever nada publicado.
+- CI por área, trava de contagem com uma área só e rulesets exigindo o check da área.
+- Homologação por repositório: rc do backend a partir do `build.gradle` (`version = '1.0.0'`),
+  rc do app a partir do `app.json`; backend promovido antes do app quando há dependência.
+- SonarQube Cloud na organização devpointinnovations; WIF do Google Cloud com o repositório
+  novo do backend.
+- Registro completo em `10-git-flow/Migracao-Repositorios-devpointinnovations-2026-10-29.md`.
+
+### O que ficou de fora
+
+- Passos de conta do PO: segredos do Actions, projetos no SonarQube Cloud, comandos `gcloud`
+  do WIF, rulesets, Code Scanning.
+- Enquanto o monorepo continuar sendo o repositório ativo, cada merge nele precisa de uma nova
+  sincronização para chegar aos repositórios da org.
+- Releases com os APKs das rc 1 a 16, issues e PRs ficam no repositório antigo.
+- Os documentos antigos continuam citando `frontend/`, `backend/` e PRs `#N` do monorepo; a
+  nota do índice explica a correspondência em vez de reescrever cada caminho.
