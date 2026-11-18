@@ -4034,3 +4034,53 @@ M-070, depois do teste de campo), liberada em 11/11/2026 com o teste de campo do
 - Releases com os APKs das rc 1 a 16, issues e PRs ficam no repositório antigo.
 - Os documentos antigos continuam citando `frontend/`, `backend/` e PRs `#N` do monorepo; a
   nota do índice explica a correspondência em vez de reescrever cada caminho.
+
+---
+
+## M-078 — Depois da migração: nomes Pulseira Verde, recorte do Sonar e Sentry fora do APK
+
+**Data:** 16/11/2026 (PRs) e 18/11/2026 (registro) · **PRs:** pulseira-verde-backend #4 e #5,
+pulseira-verde-mobile #4 e #5, pulseira-verde-admin #3 e #4, pulseira-verde-docs #3 e o PR deste
+registro · **Origem:** ajustes que vieram depois do M-077, com os repositórios já em uso
+
+### Como era
+
+- O M-077 registrou os repositórios com os nomes `radar-saude-mobile`, `radar-saude-backend`,
+  `radar-saude-docs` e `painel-admin-frontend`.
+- No monorepo o Sonar analisava só a pasta da área. Na raiz de cada repositório novo entraram
+  também `.github/`, `deploy/` e `perf/` (backend), e a organização devpointinnovations usa o
+  escopo novo do Sonar, que ignora `sonar.sources` e analisa o projeto inteiro.
+
+### O que mudou
+
+- **Nomes (16/11, backend #5, mobile #5, admin #4, docs #3):** os quatro repositórios passam a
+  `pulseira-verde-mobile`, `pulseira-verde-backend`, `pulseira-verde-admin` e
+  `pulseira-verde-docs`. README, workflows, `deploy/google/` e os documentos do git-flow foram
+  atualizados; o GitHub redireciona os endereços antigos. As chaves dos projetos no SonarQube
+  Cloud continuam as antigas (só o nome exibido mudou) e o APK passa a se chamar
+  `pulseira-verde-hom-X.Y.Z-rc.N.apk` a partir da rc.18. Registros de rcs anteriores ficam com os
+  nomes da época.
+- **Recorte do Sonar (16/11, backend #4, mobile #4, admin #3):** no backend, `sonar.exclusions`
+  tira `.github/**`, `deploy/**` e `perf/**` da análise (`build.gradle`); no mobile e no admin o
+  recorte passa de `sonar.sources` para `sonar.inclusions` (`sonar-project.properties`).
+- **Sentry fora do APK (achado em 17/11):** o log do "Build do APK" da `develop` do
+  pulseira-verde-mobile de 16/11 mostrou vazios os quatro segredos do Sentry
+  (`EXPO_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`). Eles são
+  opcionais no `cd-mobile-apk.yml`, então o build passa verde e o APK sai sem crash reporting e
+  sem o mapa de código. O recadastro dos segredos no repositório novo está com o time.
+
+### Verificação
+
+- `develop` dos três repositórios de código no merge dos PRs acima (lido no GitHub Actions em
+  18/11): CI verde no backend (#4 e #5), no mobile (#5) e no admin (#3 e #4); CD do backend no
+  Cloud Run verde no #4 e no #5; CD do APK dev verde no #5 do mobile.
+- Sentry: até 18/11, 12:20 UTC, o último "Build do APK" do mobile é o de 16/11, anterior ao
+  recadastro. **Ainda não medido** que os segredos foram preenchidos.
+
+### O que ficou de fora
+
+- Confirmar o Sentry no próximo build do APK: no log do passo "Build do APK" os quatro segredos
+  devem aparecer como `***`. Enquanto isso, o E8-07 continua 🟡 Parcial no De-Para, sem mudança,
+  e o critério dele (erro forçado no APK de homologação aparecer no Sentry) depende disso.
+- As chaves dos projetos no SonarQube Cloud continuam com os nomes antigos; trocar é decisão do
+  PO.

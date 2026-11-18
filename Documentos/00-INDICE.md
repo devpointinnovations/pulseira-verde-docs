@@ -5,6 +5,13 @@
 
 ---
 
+## 📌 Revisão 18/11/2026 — Registro do que veio depois da migração (M-078)
+
+**O que entrou:** `Historico-Melhorias.md` ganha o M-078 com os ajustes feitos nos repositórios novos depois do M-077: os nomes Pulseira Verde (backend #5, mobile #5, admin #4, docs #3), o recorte da análise do Sonar na raiz de cada repositório (backend #4, mobile #4, admin #3) e os segredos do Sentry vazios no pulseira-verde-mobile, que faziam o APK sair sem crash reporting. O recadastro ainda não foi conferido num build.
+**Sem mudança:** `De-Para-Backlog-Features.md`: nenhum item do backlog foi entregue por essas mudanças; o E8-07 continua 🟡 Parcial.
+
+---
+
 ## 📌 Revisão 16/11/2026 — Repositórios renomeados para Pulseira Verde
 
 **O que mudou:** os quatro repositórios da devpointinnovations passaram a `pulseira-verde-mobile`, `pulseira-verde-backend`, `pulseira-verde-docs` e `pulseira-verde-admin` (antes `radar-saude-*` e `painel-admin-frontend`). Links e nomes atualizados no README, no `10-git-flow/MANUAL.md`, no registro da migração e no da rc.17. Registros de rcs anteriores ficam com os nomes da época.
