@@ -1,6 +1,6 @@
 # Plano de aplicação — Liberação dos mapas por região (região, estado, município e área)
 
-> **Versão:** 1.0 · **Data:** 22/11/2026 · **Status:** 🟡 Proposto, aguardando o PO (decisões na §9)
+> **Versão:** 1.0 · **Data:** 22/11/2026 · **Status:** 🟡 Proposto; o PO decidiu L1 e L3 em 22/11/2026 (Pedregal primeiro, DF depois, liga/desliga por estabelecimento; §9), L2, L4 e L5 seguem com a recomendação
 > **Base de código:** `develop` dos quatro repositórios em 22/11/2026 (backend `39c9d8d`, admin `a6b87f6`, mobile `209b97c`)
 > **Amplia:** [`Desenho-Hospitais-por-Estado-v1.0.md`](./Desenho-Hospitais-por-Estado-v1.0.md) (ADR-017, aceito em 13/11/2026).
 > Tudo o que lá foi decidido (D1 a D7) continua valendo; este plano troca a unidade de liberação
@@ -19,6 +19,11 @@ O PO pediu, em 21/11/2026:
    inteiro, só um pedaço de um município (exemplo do PO: o Pedregal, em Novo Gama/GO) ou uma região
    inteira (exemplo do PO: toda a região Norte).
 3. **Um plano de aplicação**: fases, PRs por repositório, riscos e ordem de entrega.
+
+Em 22/11/2026, depois da primeira versão deste plano, o PO fixou o começo: **liberar o Pedregal e o
+DF, nessa ordem**, com uma ação no painel para **desligar o DF** quando quiser testar em escala menor,
+e o painel com poder de **ligar e desligar cada estabelecimento de cada região**. Só documentação,
+sem código.
 
 O ADR-017 já resolveu o difícil: catálogo por UF, catálogo em arquivo no app, UF descoberta no
 aparelho, importação do CNES por UF. O que falta é a **regra de liberação** ser mais fina e mais
@@ -131,8 +136,9 @@ Nova coleção `liberacoes` no MongoDB. Uma regra por lugar:
 ```text
 liberacoes {
   _id,
-  nivel:        REGIAO | UF | MUNICIPIO | AREA,
-  codigo:       "1" (Norte) | "52" (GO) | "5215231" (Novo Gama) | "area-pedregal-novo-gama",
+  nivel:        REGIAO | UF | MUNICIPIO | AREA | ESTABELECIMENTO,
+  codigo:       "1" (Norte) | "52" (GO) | "5215231" (Novo Gama) | "area-pedregal-novo-gama"
+                | id do hospital (ESTABELECIMENTO),
   acao:         LIBERAR | BLOQUEAR,
   nome:         "Região Norte" | "Goiás" | "Novo Gama" | "Pedregal (Novo Gama)",
   uf:           "GO"           (MUNICIPIO e AREA; nulo para REGIAO; a própria UF para UF)
@@ -144,6 +150,11 @@ liberacoes {
 ```
 
 - `BLOQUEAR` existe para abrir o todo e fechar uma parte: "Norte liberado, menos o Amapá".
+- **ESTABELECIMENTO** é o liga/desliga de um hospital, UPA ou UBS dentro de uma região, pedido pelo
+  PO em 22/11/2026. Não é o mesmo que o `ativo` que o painel já tem (`PATCH` de status, E7-07):
+  `ativo = false` diz que a unidade não existe mais ou não funciona, e vale em todo lugar;
+  `ESTABELECIMENTO BLOQUEAR` diz só "não aparece no app por enquanto" (ponto em revisão, teste em
+  escala menor) e some quando a regra é removida. Os dois continuam separados.
 - O histórico fica em `liberacoes_historico` (só inserção: quem, quando, antes, depois, motivo).
   Volta atrás vira uma regra nova, nunca apagar o histórico.
 - **Área é um círculo** (centro + raio) nesta versão: o Leaflet do painel desenha círculo sem
@@ -166,12 +177,15 @@ liberacoes {
 Para cada estabelecimento, vale a regra **mais específica** que o alcança:
 
 ```text
+0. ESTABELECIMENTO regra do próprio hospital
 1. ÁREA      círculos que contêm o ponto  → se algum BLOQUEAR: fechado; se algum LIBERAR: aberto
 2. MUNICÍPIO regra do endereco.codigoMunicipio
 3. UF        regra do endereco.uf
 4. REGIÃO    regra da região da UF (1º dígito do código da UF)
 5. padrão    fechado
 ```
+
+O que estiver com `ativo = false` fica fora antes de tudo isso, como hoje.
 
 Entre duas áreas sobrepostas, `BLOQUEAR` vence (o lado seguro). O cálculo roda em memória, na
 montagem do catálogo da UF: no máximo 7.220 estabelecimentos (MG) contra algumas dezenas de regras.
@@ -189,6 +203,21 @@ Não existe campo "liberado" gravado no hospital, então ligar ou desligar não 
 | Toda a região Norte | `REGIAO 1 LIBERAR` | 5.414 unidades em 7 UFs |
 | Norte, menos o Amapá até a revisão | `REGIAO 1 LIBERAR` · `UF 16 BLOQUEAR` | 6 UFs; AP mostra "ainda não chegou" |
 | Amapá fechado, mas Macapá aberta | o anterior + `MUNICIPIO Macapá LIBERAR` | só Macapá no AP |
+| DF aberto, menos um hospital em revisão | `UF 53 LIBERAR` · `ESTABELECIMENTO <id> BLOQUEAR` | DF sem aquele hospital |
+| Pedregal fechado, mas uma UBS dele aberta | `ESTABELECIMENTO <id> LIBERAR` | só aquela UBS em GO |
+
+### 4.5 A ordem decidida pelo PO: Pedregal primeiro, DF depois
+
+| Etapa | Regras | O que o app mostra | No painel |
+|---|---|---|---|
+| **1. Só o Pedregal** (teste em escala menor) | `AREA Pedregal (Novo Gama) LIBERAR` · `UF 53 BLOQUEAR` | Em GO, as unidades do círculo; no DF, a tela "ainda não chegou" | Liga a área; desliga o DF |
+| **2. Pedregal + DF** | `AREA Pedregal LIBERAR` · `UF 53 LIBERAR` | Pedregal e o DF inteiro | Liga o DF |
+| **Voltar ao teste menor** (quando quiser) | `UF 53 BLOQUEAR` de novo | Volta à etapa 1 | Desliga o DF |
+| **Tirar um estabelecimento** (qualquer etapa) | `ESTABELECIMENTO <id> BLOQUEAR` | Some só aquele | Desliga a linha dele |
+
+Desligar o DF é uma regra, não apaga nada: os 341 estabelecimentos, as visitas e as avaliações ficam
+no banco, e ligar de novo devolve tudo como estava. Quem estiver no meio de uma visita num hospital do
+DF quando ele for desligado termina a visita normalmente (§5.2).
 
 ---
 
@@ -203,6 +232,10 @@ Não existe campo "liberado" gravado no hospital, então ligar ou desligar não 
 | `DELETE /admin/liberacoes/{nivel}/{codigo}` | Remove a regra: o lugar volta a herdar do nível de cima. Grava o histórico |
 | `POST /admin/liberacoes/previa` | Recebe a regra que o ADMIN vai salvar e devolve, sem gravar: quantos estabelecimentos entram e saem, por UF e município, quantos pontos suspeitos e quais UFs ainda não têm importação |
 | `GET /admin/liberacoes/historico?nivel=&codigo=` | Histórico paginado |
+| `GET /admin/liberacoes/estabelecimentos?nivel=&codigo=` | Os estabelecimentos de um lugar (região, UF, município ou área), paginados, cada um com a situação efetiva e de qual regra ela vem. É a lista do liga/desliga por estabelecimento (§6.1) |
+
+O liga/desliga de um estabelecimento usa o mesmo `PUT`/`DELETE` com `nivel = ESTABELECIMENTO`.
+Ligar ou desligar o DF inteiro é `PUT /admin/liberacoes/UF/53` com `LIBERAR` ou `BLOQUEAR`.
 | `GET /admin/localidades/regioes`, `/ufs?regiao=`, `/municipios?uf=` | Da tabela do classpath, com a contagem de estabelecimentos importados e a situação de cada um (aberto, fechado, herdado de onde) |
 
 Validações: `codigo` existe na tabela de localidades; `motivo` obrigatório; raio entre 200 m e 20 km;
@@ -222,7 +255,11 @@ recusado** (409), para não abrir uma UF vazia.
 
   `versaoCatalogo` (o campo único de hoje) continua com a versão do DF, para os APKs instalados.
 - `GET /api/v1/catalogo?uf=GO`, indicadores e ranking: como no ADR-017 §4.1, mas o filtro é a regra
-  da §4.3, não só a UF. Sem `uf`, só o DF, sempre. A versão de cada catálogo continua sendo o SHA-256
+  da §4.3, não só a UF. Sem `uf`, só o DF, sempre, **e também pela regra**: com o DF desligado, o
+  pedido sem `uf` devolve o catálogo vazio. Os APKs instalados hoje (rc.17 e anteriores) não sabem
+  mostrar "ainda não chegou" e ficariam com a lista vazia; por isso a etapa 1 da §4.5 só começa com a
+  versão mínima do app (`versaoMinimaApp`, já existente) apontando para a versão da Fase 6, e esses
+  APKs passam a mostrar o aviso de atualização. A versão de cada catálogo continua sendo o SHA-256
   do conteúdo, então qualquer mudança de regra muda a versão sozinha.
 - Busca por raio e detalhe: escondem o que estiver fechado.
 - **Check-in novo** em estabelecimento fechado: 409 `FORA_DA_COBERTURA`. Hoje a D5 ("visita em UF não
@@ -256,7 +293,13 @@ instâncias nesta versão.
 └───────────────────────────────────────────────────────────────┘
 ```
 
+- No topo, um interruptor fixo **"DF no app: ligado/desligado"**, o atalho para a etapa 1 ↔ 2 da §4.5,
+  com a prévia ("vai tirar 341 estabelecimentos do app") e a confirmação de sempre.
 - Cada linha mostra a situação efetiva e **de onde ela vem** ("herdado da região", "regra própria").
+- Abrir uma linha (região, UF, município ou área) mostra os **estabelecimentos daquele lugar**, com
+  busca e filtro por tipo, e um interruptor em cada um. Desligar um cria a regra `ESTABELECIMENTO
+  BLOQUEAR`; ligar de volta num lugar aberto remove a regra (volta a herdar). A linha mostra quando
+  o estado do estabelecimento é diferente do lugar ("desligado à mão em 22/11 por …").
 - "+ Área no mapa": clicar no centro, arrastar o raio, ver os pontos que entram.
 - **Toda gravação passa pela prévia** (§5.1): "Vai abrir 5.414 estabelecimentos em 7 UFs; 3 UFs sem
   revisão de pontos suspeitos". Liberar uma região ou UF com revisão pendente pede confirmação
@@ -267,6 +310,8 @@ instâncias nesta versão.
 
 - Hospitais, Mapa e Dashboard: filtro por UF e município (ADR-017 §6) e a marca "fora da cobertura"
   em cada estabelecimento fechado, para o ADMIN revisar antes de abrir.
+- Detalhe do hospital: ganha o mesmo interruptor "aparece no app", ao lado do "ativo" que já existe,
+  com o texto que diferencia os dois (§4.1).
 
 ---
 
@@ -312,9 +357,9 @@ Quase nada além do ADR-017 Fase 3, porque o servidor já entrega o catálogo da
 
 | # | Pergunta | Recomendação |
 |---|---|---|
-| **L1** | Os quatro níveis (região, UF, município, área) entram já, ou só UF e região agora? | Os quatro: o Pedregal e "só Goiânia" foram exemplos do próprio pedido |
+| **L1** | Os quatro níveis (região, UF, município, área) entram já, ou só UF e região agora? | ✅ **Decidido pelo PO em 22/11/2026:** os quatro, **mais o liga/desliga por estabelecimento** de cada região (nível ESTABELECIMENTO, §4.1) |
 | **L2** | Área: círculo agora e polígono depois, ou polígono já? | Círculo agora (sem plugin, prévia mostra o que entra) |
-| **L3** | Primeira liberação fora do DF: GO inteiro (D6) ou só o Pedregal como piloto? | Pedregal como piloto: 5 unidades, perto do DF, testa a divisa e a área de uma vez; GO inteiro depois da revisão |
+| **L3** | Primeira liberação fora do DF: GO inteiro (D6) ou só o Pedregal como piloto? | ✅ **Decidido pelo PO em 22/11/2026:** Pedregal primeiro, DF depois, com o DF podendo ser desligado no painel para testes em escala menor (§4.5). GO inteiro fica para depois da revisão |
 | **L4** | Liberar com revisão de pontos suspeitos pendente: bloquear ou permitir com confirmação? | Permitir com confirmação digitada, registrada no histórico |
 | **L5** | Retrato atual do CNES (§2.1): baixar no desktop pelo OpenDataSUS ou cruzar com o ST mensal? | Baixar no desktop: é um passo manual por mês e não exige ler DBC |
 
@@ -331,19 +376,20 @@ catálogo.
 |---|---|---|---|---|
 | 0 | — | — | Teste no aparelho da leitura de um catálogo de 3 MB (ADR-017 Fase 0) | — |
 | 1 | backend | `feature/catalogo-por-uf` | ADR-017 Fase 1 (catálogo, indicadores e ranking por `uf`, DF como padrão) **mais** tabela de localidades no classpath, `endereco.codigoMunicipio`, reconciliação do DF para `5300108` e índice novo | 4 |
-| 2 | backend | `feature/liberacao-por-regiao` | Coleção `liberacoes` e histórico, resolvedor da §4.3, rotas do §5.1, `coberturas` na configuração remota, catálogo filtrado pela regra, 409 `FORA_DA_COBERTURA` no check-in novo, regra inicial `UF 53 LIBERAR` criada na subida se a coleção estiver vazia | 4 |
+| 2 | backend | `feature/liberacao-por-regiao` | Coleção `liberacoes` e histórico, resolvedor da §4.3 com o nível ESTABELECIMENTO, rotas do §5.1, `coberturas` na configuração remota, catálogo filtrado pela regra (inclusive o pedido sem `uf`), 409 `FORA_DA_COBERTURA` no check-in novo, regra inicial `UF 53 LIBERAR` criada na subida se a coleção estiver vazia (o app continua como hoje até o ADMIN mudar) | 4,5 |
 | 3 | backend + docs | `feature/importador-cnes-por-uf` / `doc/importacao-cnes-go` | ADR-017 Fase 2 com `codigoMunicipio` e pontos suspeitos por município; relatório de GO em `07-dados/` | 4 |
-| 4 | admin | `feature/tela-cobertura` | Tela Cobertura (§6.1) com árvore, mapa, área em círculo, prévia, confirmação e histórico | 4 |
+| 4 | admin | `feature/tela-cobertura` | Tela Cobertura (§6.1) com o interruptor do DF, árvore, mapa, área em círculo, lista de estabelecimentos com liga/desliga, prévia, confirmação e histórico | 5 |
 | 5 | admin | `feature/filtro-uf-municipio` | ADR-017 Fase 4 (filtros e dashboard por UF/município) e a marca "fora da cobertura" | 2 |
 | 6 | mobile | `feature/catalogo-por-uf` | ADR-017 Fase 3 mais o aviso de cobertura parcial e o tratamento do 409 na fila | 9 a 11 |
-| 7 | — | homologação | rc do backend (Fases 1–3), depois rc do app (Fase 6) com o par anotado; liberar o Pedregal na homologação e testar a divisa em campo | 2 + campo |
+| 7 | — | homologação | rc do backend (Fases 1–3), depois rc do app (Fase 6) com o par anotado. Na homologação, nesta ordem: (a) `versaoMinimaApp` na versão da Fase 6; (b) etapa 1 da §4.5, só o Pedregal, com o DF desligado; teste em campo no Pedregal e na divisa; (c) etapa 2, ligar o DF e conferir que o DF volta inteiro (341) sem perder visitas e avaliações; (d) desligar e religar um estabelecimento | 2 + campo |
 
 Em cada PR de código, o PR correspondente no `pulseira-verde-docs` atualiza a
 `Especificacao-API-v2.4.md`, o `De-Para-Backlog-Features.md` e o `Historico-Melhorias.md` só com o que
 foi entregue.
 
-**Total:** cerca de 29 a 31 dias até o piloto do Pedregal em campo, contra 21 a 23 do ADR-017 só por
-UF. A diferença (≈ 8 dias) é o custo dos níveis município e área e da tela Cobertura.
+**Total:** cerca de 30 a 33 dias até o piloto do Pedregal em campo, contra 21 a 23 do ADR-017 só por
+UF. A diferença (≈ 9 a 10 dias) é o custo dos níveis município, área e estabelecimento e da tela
+Cobertura.
 
 ---
 
@@ -355,6 +401,8 @@ UF. A diferença (≈ 8 dias) é o custo dos níveis município e área e da tel
 | Liberar região inteira sem revisão | Pontos de centroide viram conflito de check-in em 7 UFs | Prévia com pontos suspeitos e confirmação digitada (L4) |
 | Cache de 5 min por instância | ADMIN fecha uma área e alguns aparelhos ainda veem por minutos | Aviso na tela; check-in fechado já é recusado pelo servidor |
 | APKs antigos | Catálogo muda sob eles | Sem `uf` → só DF, nunca outra UF (ADR-017 §4.1); `versaoCatalogo` mantido |
+| DF desligado com APKs antigos instalados | Lista vazia, sem explicação, para os testadores da rc | `versaoMinimaApp` antes da etapa 1 (§5.2) |
+| Confundir "aparece no app" com "ativo" | ADMIN desativa um hospital que só queria esconder, e ele some do histórico do painel | Dois interruptores com textos diferentes (§6.2) |
 | Conflito com a migração de layout no app | Retrabalho nas telas de lista e mapa | Fase 6 só depois dos PRs de layout mergeados |
 | Círculo pega bairro vizinho | Unidade errada aberta | Prévia lista as unidades; polígono como evolução (L2) |
 | Código de município com 6 dígitos no CNES | Junção errada com o IBGE | Tabela de localidades faz a ponte 6 → 7 dígitos, com teste |

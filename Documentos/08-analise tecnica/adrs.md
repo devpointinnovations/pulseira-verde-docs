@@ -1428,7 +1428,7 @@ para os APKs já instalados.
 ## ADR-018: Liberação do app por região, estado, município e área
 
 **Data:** 2026-11-22
-**Status:** Proposto — aguardando o PO (decisões L1–L5); amplia o ADR-017
+**Status:** Proposto — o PO decidiu L1 e L3 em 22/11/2026 (Pedregal primeiro, DF depois, DF desligável no painel, liga/desliga por estabelecimento); L2, L4 e L5 com a recomendação; amplia o ADR-017
 **Área:** Backend, Painel Admin e App
 **Plano completo:** [`02-arquitetura-tecnica/Plano-Liberacao-Mapas-por-Regiao-v1.0.md`](../02-arquitetura-tecnica/Plano-Liberacao-Mapas-por-Regiao-v1.0.md)
 
@@ -1439,7 +1439,7 @@ município (Goiânia) ou um pedaço de município (o Pedregal, em Novo Gama/GO),
 
 ### Decisão proposta
 
-Regras de liberação por nível (região, UF, município, área em círculo), com `LIBERAR` e `BLOQUEAR`,
+Regras de liberação por nível (região, UF, município, área em círculo e estabelecimento), com `LIBERAR` e `BLOQUEAR`,
 em que vale a mais específica e o padrão é fechado. O filtro roda na montagem do catálogo da UF; nada
 é gravado no hospital. Importar e liberar são passos separados.
 
