@@ -5,6 +5,13 @@
 
 ---
 
+## 📌 Revisão 22/11/2026 — Homologação v1.0.0-rc.18
+
+**O que entrou:** registro da rc que leva o app para o layout novo (proposta Open Design, logo B, paleta verde) e para o funcionamento offline total (pulseira-verde-mobile #6 a #12, M-079). É só do app: o backend continua o da rc.17, que só recebeu a troca de nomes (#5). É o primeiro APK com o nome `pulseira-verde-hom-*`. O roteiro confere a apresentação, as telas novas e o uso sem internet, e remete ao roteiro da rc.17. Em [`10-git-flow/homologacoes/v1.0.0-rc.18.md`](./10-git-flow/homologacoes/v1.0.0-rc.18.md).
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (a entrega já está no M-079).
+
+---
+
 ## 📌 Revisão 22/11/2026 — Plano de liberação dos mapas por região
 
 **O que entrou:** a pedido do PO, o [`Plano-Liberacao-Mapas-por-Regiao-v1.0.md`](./02-arquitetura-tecnica/Plano-Liberacao-Mapas-por-Regiao-v1.0.md) levanta as fontes abertas de estabelecimentos de saúde (CNES no OpenDataSUS e no FTP do DATASUS, malhas e localidades do IBGE) e amplia o ADR-017: o painel passa a liberar o app por região, UF, município ou área em círculo, com herança (vale a regra mais específica, padrão fechado). Traz os números medidos para o Norte (5.414), GO, Goiânia e Pedregal (Novo Gama), o modelo, a API, a tela Cobertura do painel, o impacto no app e na carga, as fases com um PR por repositório (backend antes do painel e do app) e as decisões L1–L5. O PO decidiu em 22/11/2026 começar pelo Pedregal e depois o DF, com o DF desligável no painel para testes em escala menor e o liga/desliga de cada estabelecimento por região. ADR-018 proposto (`08-analise tecnica/adrs.md`). Sem código.
