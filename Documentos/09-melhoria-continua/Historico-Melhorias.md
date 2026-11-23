@@ -4148,3 +4148,47 @@ fluxo de tela por branch, e o app funcionar sem internet enviando os dados quand
   conta. O mapa mostra só os blocos já vistos.
 - Ícone e splash com a arte final do logo B.
 - Homologação rc.18, que fica com o PO.
+
+---
+
+## M-080 — Início, ícone e fonte alinhados ao design aprovado
+
+**Data:** 23/11/2026 · **Origem:** pedido direto do PO, com capturas da rc.18 ("o design está fora
+do escopo do Open Design") e a imagem do Início esperado · **PR (pulseira-verde-mobile):**
+feature/layout-alinhamento-design
+
+### Contexto
+
+- Na rc.18 o ícone do app ainda era o pin azul antigo, e o Início mostrava só busca, chips e
+  cards com botão Check-in, sem o mapa do topo do desenho.
+- Decisão do PO (23/11/2026), "seguir o design à risca": o card do Início perde o botão Check-in
+  (o check-in manual fica no detalhe, em "Estou aqui agora") e o chip "Até 5 km" entra no lugar
+  de Filantrópico.
+
+### O que mudou
+
+- **Ícone e abertura:** logo B (pin branco com cruz sobre o verde `#0B6B4F`) no ícone, no ícone
+  adaptativo, no monocromático e na abertura. A arte é gerada por `assets/icon-src/gerar_icone.js`.
+- **Fonte:** Inter em todo o app, com os pesos 400 a 800.
+- **Início:**
+  - Mapa no topo com a nota de cada hospital num pin (o de melhor nota em verde) e a posição da
+    pessoa. Tocar no mapa abre o mapa completo; o mapa do Início não recebe gestos (BUG-04).
+  - Busca flutuante com o avatar, que abre o Perfil.
+  - Folha "Perto de você" com "Ver ranking" e os chips Todos, Público, Privado e Até 5 km.
+  - Com GPS, a lista vai do mais perto ao mais longe e o card mostra a distância. Sem GPS, segue
+    a ordem do catálogo, e "Até 5 km" pede a localização.
+  - Card: tipo, distância ou "você está aqui", estrelas, nota, avaliações e espera.
+- **Detalhe:** botão Compartilhar no topo.
+- **Tempos:** "45 min" e "1 h 30" no lugar dos formatos anteriores.
+
+### Verificação
+
+- 73 suítes e 945 testes passando; cobertura do código alterado em 100%.
+- Testes novos: mapa do Início, filtro de 5 km com e sem GPS, avatar, Compartilhar e o hook de
+  check-in do detalhe (`useCheckinNoHospital`), que antes só era coberto pela lista do Início.
+
+### O que ficou de fora
+
+- "Como as pessoas avaliaram", com uma barra por dimensão: a API de indicadores não devolve
+  nota por dimensão. Fica para um PR de backend.
+- No Ranking, a pílula do estado e o chip UPA: o filtro de tipo da API é só a natureza.
