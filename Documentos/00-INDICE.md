@@ -5,6 +5,13 @@
 
 ---
 
+## 📌 Revisão 23/11/2026 — E8-06: regras de alerta e painel de latência por rota
+
+**O que entrou:** registro da parte portátil do E8-06 (pulseira-verde-backend #9, M-082). Regras do Prometheus e painel do Grafana por rota, em `monitoramento/` no backend, testados no CI com `promtool`. São portáteis porque a infraestrutura vai sair do Cloud Run para a Oracle (decisão do PO, 23/11/2026).
+**Atualizados:** `De-Para-Backlog-Features.md` (E8-06 segue 🟡), `Historico-Melhorias.md` (M-082, com os 3 pontos pendentes da migração: onde o coletor roda, coleta sem token ADMIN e notificação no celular) e a linha OPS-04 da `Consolidacao-Tecnica-e-Backlog-Pendente-v1.1.md`.
+
+---
+
 ## 📌 Revisão 23/11/2026 — Auditoria de arquitetura e padrões
 
 **O que entrou:** a pedido do PO, a [`Auditoria-Arquitetura-Padroes-v1.0.md`](./08-analise%20tecnica/Auditoria-Arquitetura-Padroes-v1.0.md) mede nos quatro repositórios qual estilo o sistema segue: monólito Spring Boot em camadas (MVC) organizado por funcionalidade, com um evento em memória e jobs agendados; app offline-first com TanStack Query e Zustand; painel Angular 21 standalone e zoneless. Não é SOA, microsserviços, hexagonal, CQRS nem DDD tático. Traz a tabela padrão × evidência × aderência, as divergências com os ADRs (status de ADR-001 a ADR-010 desatualizado, ADR-016 ausente, motivo vencido do `--max-instances=1`) e dez recomendações priorizadas, com destaque para o check-in que pode duplicar visita ativa, os ciclos entre módulos do backend e as escritas sem transação. Sem código.
