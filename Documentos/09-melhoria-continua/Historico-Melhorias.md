@@ -4154,8 +4154,8 @@ fluxo de tela por branch, e o app funcionar sem internet enviando os dados quand
 ## M-080 — Início, ícone e fonte alinhados ao design aprovado
 
 **Data:** 23/11/2026 · **Origem:** pedido direto do PO, com capturas da rc.18 ("o design está fora
-do escopo do Open Design") e a imagem do Início esperado · **PR (pulseira-verde-mobile):**
-feature/layout-alinhamento-design
+do escopo do Open Design") e a imagem do Início esperado · **PRs (pulseira-verde-mobile):**
+#14 (feature/layout-alinhamento-design) e #15 (bugfix/cobertura-sonar-layout)
 
 ### Contexto
 
@@ -4180,6 +4180,11 @@ feature/layout-alinhamento-design
   - Card: tipo, distância ou "você está aqui", estrelas, nota, avaliações e espera.
 - **Detalhe:** botão Compartilhar no topo.
 - **Tempos:** "45 min" e "1 h 30" no lugar dos formatos anteriores.
+- **Sonar (PR #15):** depois do merge do #14, a cobertura do código novo ficou em 80,2%, abaixo
+  dos 90%, por causa das linhas de `assets/icon-src/gerar_icone.js`, um script de uso único que
+  gera a arte do ícone e não roda no app. O #15 pôs `assets/icon-src/**` em
+  `sonar.coverage.exclusions` e somou 2 testes: hospital sem coordenada vai para o fim da lista,
+  e Compartilhar funciona sem nota.
 
 ### Verificação
 
