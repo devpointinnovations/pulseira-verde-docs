@@ -7,8 +7,8 @@
 
 ## 📌 Revisão 23/11/2026 — E8-06: regras de alerta e painel de latência por rota
 
-**O que entrou:** registro da parte portátil do E8-06 (pulseira-verde-backend #9, M-082). Regras do Prometheus e painel do Grafana por rota, em `monitoramento/` no backend, testados no CI com `promtool`. São portáteis porque a infraestrutura vai sair do Cloud Run para a Oracle (decisão do PO, 23/11/2026).
-**Atualizados:** `De-Para-Backlog-Features.md` (E8-06 segue 🟡), `Historico-Melhorias.md` (M-082, com os 3 pontos pendentes da migração: onde o coletor roda, coleta sem token ADMIN e notificação no celular) e a linha OPS-04 da `Consolidacao-Tecnica-e-Backlog-Pendente-v1.1.md`.
+**O que entrou:** registro da parte portátil do E8-06 (pulseira-verde-backend #9, M-084). Regras do Prometheus e painel do Grafana por rota, em `monitoramento/` no backend, testados no CI com `promtool`. São portáteis porque a infraestrutura vai sair do Cloud Run para a Oracle (decisão do PO, 23/11/2026).
+**Atualizados:** `De-Para-Backlog-Features.md` (E8-06 segue 🟡), `Historico-Melhorias.md` (M-084, com os 3 pontos pendentes da migração: onde o coletor roda, coleta sem token ADMIN e notificação no celular) e a linha OPS-04 da `Consolidacao-Tecnica-e-Backlog-Pendente-v1.1.md`.
 
 ---
 

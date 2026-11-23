@@ -141,6 +141,14 @@ Acesso direto a **repositório ou documento de outro módulo** (fora seed): `Aut
 
 **Leitura:** os nomes dos pacotes desenham contextos, mas o código os atravessa pelo banco. Quem muda um campo de `VisitaDocument` precisa conferir `feedback`, `indicador`, `user` e os seeds. É o principal motivo para não chamar isto de "monólito modular" sem ressalva, embora a Análise de Escala (§12.3) diga "monólito modular com 6 contextos claros". Hoje são 8 módulos de negócio e os contextos não são fechados.
 
+**Estado da R3 em 23/11/2026: parcialmente atendido** (backend #7 e #8, M-082 e M-083).
+
+- **Fechado:** acesso a `repository` de outro módulo, de 42 usos para 0, por quatro fachadas (`HospitalConsulta`, `VisitaConsulta`, `FeedbackConsulta`, `UsuarioConsulta`). O `ArquiteturaModulosTest` (ArchUnit) impede que volte.
+- **Aberto, congelado em `archunit_store` (só pode diminuir):**
+  - **`document` de outro módulo, 221 usos:** `auth`→`user` (`AuthServiceImpl`, 28); `config.security`→`user` (`JwtService` 4, `CustomUserDetailsService` 7, `AutenticacaoHelper` 1); `feedback`→`hospital`, `visita` (`FeedbackServiceImpl` 26, seed `MassaAvaliacoesGerador` 54); `feedback`→`hospital`, `user`, `visita` (seed `MassaAvaliacoesRunner` 34); `indicador`→`feedback`, `visita` (`IndicadorServiceImpl` 26); `user`→`feedback`, `visita` (`UserServiceImpl` 10, `ExportacaoPdfServiceImpl` 11); `visita`→`hospital` (`VisitaServiceImpl` 14).
+  - **Ciclos, 28 arestas entre módulos:** `auth ⇄ user`, `config ⇄ user`, `config ⇄ visita`, `config ⇄ configuracao`, `feedback ⇄ visita`, `feedback ⇄ indicador`, `hospital ⇄ indicador`, `visita → hospital`, `user → feedback, hospital, indicador, visita`, `configuracao → hospital`, `hospital → regiao`, e `config` recebendo de quase todos os módulos.
+- **Próximo passo:** devolver pelas fachadas projeções ou DTOs próprios da fronteira, em vez do `Document` do módulo dono, e só então tirar os 221 usos. Inversão por evento apenas onde for natural, como o `FeedbackSalvoEvent` que já avisa o `indicador`. Cada exceção removida sai do `archunit_store` no mesmo PR.
+
 ### 4.3 Eventos e processamento assíncrono
 
 ```
@@ -233,7 +241,7 @@ O maior arquivo é `screens/visitas/service/GeofencingTaskService.js` com **1.12
 | Prior. | ID | Risco / dívida | Evidência | Recomendação | Esforço |
 |:---:|---|---|---|---|:---:|
 | **P1** | R2 | Duas visitas ativas para a mesma pessoa sob concorrência (geofencing + fila offline + toque manual) | `VisitaServiceImpl.java:121-160`; índices em `VisitaDocument.java:33-41` | Índice único parcial em `usuarioId` e outro em `dispositivoId` com `status ∈ {EM_ATENDIMENTO, SUSPEITA}`, tratando `DuplicateKeyException` como "devolve a ativa" | Baixo <br>✅ **Corrigido em 23/11/2026** (backend #6, M-081) |
-| **P2** | R3 | Ciclos e acesso a repositório alheio: mudança num módulo quebra outro sem aviso; impede extrair um módulo no futuro | §4.2 | Cada módulo expõe uma fachada (`VisitaConsulta`, `HospitalConsulta`…) e só ela é importada de fora; teste de arquitetura (ArchUnit ou Spring Modulith `ApplicationModules.verify()`) no CI para impedir regressão | Médio |
+| **P2** | R3 | Ciclos e acesso a repositório alheio: mudança num módulo quebra outro sem aviso; impede extrair um módulo no futuro | §4.2 | Cada módulo expõe uma fachada (`VisitaConsulta`, `HospitalConsulta`…) e só ela é importada de fora; teste de arquitetura (ArchUnit ou Spring Modulith `ApplicationModules.verify()`) no CI para impedir regressão | Médio <br>🟡 **Parcialmente atendido em 23/11/2026** (backend #7 e #8, M-082 e M-083): `repository` alheio 42 → 0 e teste de arquitetura no CI; faltam `document` (221) e ciclos (28 arestas), ver §4.2 |
 | **P2** | R4 | Estado na instância impede escalar: rate limit em memória e `max=1` com motivo vencido | `RateLimitService.java:57`; D6 | Decidir no ADR-015 o caminho do rate limit (borda/Cloudflare ou Mongo) e só então subir `max-instances`; atualizar o comentário do CD | Médio |
 | **P2** | R5 | Contrato da API duplicado à mão em JS e TS, sem teste de contrato | P21 | Gerar os tipos do painel a partir do `/v3/api-docs` (`openapi-typescript`) no CI e, com o ADR-010, no app; publicar o `openapi.json` como artefato do backend | Médio |
 | **P3** | R6 | `GeofencingTaskService.js` com 1.124 linhas concentra a regra mais crítica do app | §5.2 | Separar em funções puras (decisão de entrada/saída, recálculo de região) e adaptadores do Expo; testar as puras sem *mock* do TaskManager | Médio |
