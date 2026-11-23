@@ -4343,3 +4343,69 @@ pedido direto do PO · **PR (pulseira-verde-backend):** #8
 - Os 221 usos de `document` de outro módulo e os 28 ciclos seguem como exceção conhecida. Os
   ciclos dependem também dos `document`; o próximo passo está na seção de estado da R3 da
   auditoria.
+
+---
+
+## M-084 — Regras de alerta e painel de latência por rota, portáteis (E8-06, parte 2)
+
+**Data:** 23/11/2026 · **Origem:** pedido direto do PO, item E8-06 da análise de pendências de
+13/11/2026 · **PR (pulseira-verde-backend):** #9 (feature/e8-06-regras-painel-prometheus)
+
+### Contexto
+
+- Desde 06/09/2026 o backend mede latência e erro por rota (histograma de
+  `http.server.requests` em `/actuator/prometheus`, papel ADMIN). Faltavam a coleta, o painel e
+  o alerta.
+- Em 23/11/2026 o PO decidiu que a infraestrutura vai sair do Cloud Run para a Oracle e que o
+  OPS-02 (logs estruturados) não será feito agora. O plano de alertas no Cloud Monitoring foi
+  descartado, porque seria jogado fora na migração.
+
+### O que mudou
+
+- `monitoramento/prometheus/regras-latencia.yml`: regras de gravação (`pv:*`, p50, p95, p99,
+  requisições/s e 5xx por rota) e quatro alertas, todos com limiares provisórios:
+  - p95 acima de 300 ms por 10 min (RNF-02), com o login fora;
+  - login acima de 500 ms (mediu 310 ms em 23/09/2026);
+  - 5xx acima de 1% por 10 min;
+  - coleta parada por 5 min.
+
+  Os alertas de latência e de 5xx exigem pelo menos 3 requisições/min, para uma requisição
+  isolada lenta não disparar alarme.
+- `monitoramento/prometheus/regras-latencia.test.yml`: testes do `promtool` com disparo e não
+  disparo de cada alerta, rodados no CI num job novo ("Regras e painel de monitoramento").
+- `monitoramento/grafana/painel-operacao.json`: painel "Operação", com resumo por rota.
+- `perf/`: o Prometheus e o Grafana locais do teste de desempenho carregam as regras e o painel.
+- Tudo é PromQL, sem nada da nuvem: serve a qualquer coletor compatível com Prometheus.
+
+### Verificação
+
+- `promtool test rules` passando. As 8 mutações de limiar, piso de tráfego, janela e filtros
+  testadas fazem o teste falhar.
+- Backend local coletado por Prometheus 3.0.1 com as regras, e Grafana 11.3.0 com o painel. O
+  painel mostrou p50, p95, p99, req/s e 5xx por rota, e uma cópia da regra de p95 com o limiar
+  baixado chegou a "firing". Essa validação achou e corrigiu 2 defeitos:
+  - sem nenhum 5xx, a série nem existia e o painel mostrava "sem dados";
+  - a tabela não juntava as consultas.
+- Achado: respostas recusadas antes do controller (429 do limitador, 401 sem token, rota
+  inexistente) chegam com `uri="UNKNOWN"`.
+
+### Pendente da migração de infraestrutura (NÃO PERDER)
+
+O E8-06 continua 🟡. Estes três pontos dependem do destino na Oracle e precisam entrar no
+trabalho da migração. Sem eles não há painel nem alerta em operação contínua:
+
+1. **Onde o coletor roda e guarda os dados.** O Prometheus pode ficar na mesma máquina do
+   backend, numa separada ou num serviço gerenciado compatível com Prometheus. Hoje só roda na
+   máquina de quem faz o teste de desempenho (`perf/`), e não é contínuo.
+2. **Coleta sem o token ADMIN.** `/actuator/prometheus` exige papel ADMIN, e o `perf/` contorna
+   isso renovando um token a cada 10 min. A proposta é uma porta de gerenciamento só na rede
+   interna (`management.server.port`), com revisão de segurança, porque mexe em endpoint e em
+   autenticação.
+3. **Notificação no celular.** É preciso um Alertmanager, ou o equivalente do destino, com um
+   canal que chegue ao celular do PO. Junto vem o critério de pronto do E8-06: **um alerta de
+   teste recebido no celular**, com print e horário.
+
+Também ficam para depois:
+
+- recalibrar os limiares com a prova de carga no ambiente novo (P13/PERF-01);
+- o alerta de gasto, com o valor da P5.
