@@ -1,7 +1,14 @@
 # 📚 Índice Central da Documentação — saude-monitor
 
 > **Sistema de Monitoramento Hospitalar por Geolocalização (Clinical Sanctuary)**
-> Última atualização: 22/11/2026 · Responsável: Gabriel Vogado
+> Última atualização: 23/11/2026 · Responsável: Gabriel Vogado
+
+---
+
+## 📌 Revisão 23/11/2026 — Homologação v1.0.0-rc.19
+
+**O que entrou:** registro da rc que alinha o app ao design aprovado: ícone e abertura com o logo B, fonte Inter, Início com o mapa no topo e cards sem o botão Check-in (pulseira-verde-mobile #14 e #15, M-080). É só do app: o backend continua o da rc.17. O roteiro confere o ícone, a fonte e o Início novo, e remete ao roteiro da rc.18. Em [`10-git-flow/homologacoes/v1.0.0-rc.19.md`](./10-git-flow/homologacoes/v1.0.0-rc.19.md).
+**Correção:** no M-080 do `Historico-Melhorias.md`, a contagem de testes passa de 945 para 942, o número medido.
 
 ---
 

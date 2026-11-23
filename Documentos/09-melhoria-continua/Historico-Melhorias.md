@@ -4087,6 +4087,21 @@ registro · **Origem:** ajustes que vieram depois do M-077, com os repositórios
 
 ---
 
+## Plano — Liberação dos mapas por região (sem código, sem número M)
+
+**Data:** 21 e 22/11/2026 (merge em 22/11/2026, 21:00 BRT) · **Origem:** pedido direto do PO ·
+**PR:** pulseira-verde-docs #5
+
+- Entrou só o plano [`Plano-Liberacao-Mapas-por-Regiao-v1.0.md`](../02-arquitetura-tecnica/Plano-Liberacao-Mapas-por-Regiao-v1.0.md)
+  e o ADR-018 (proposto) em `08-analise tecnica/adrs.md`: o app passa a ser liberado por região,
+  UF, município ou área em círculo, vale a regra mais específica e o padrão é fechado.
+- Decisões do PO de 22/11/2026: começar pelo Pedregal (Novo Gama), depois o DF, com o DF
+  desligável no painel e o liga/desliga de cada estabelecimento por região.
+- Fica sem número M porque não houve entrega: a melhoria nasce quando os PRs de backend, painel
+  e app forem feitos. Por isso também não entrou no De-Para.
+
+---
+
 ## M-079 — Layout novo do app e funcionamento offline total
 
 **Data:** 21 a 23/11/2026 · **Origem:** pedido direto do PO (migrar o app para o layout novo, um
@@ -4154,8 +4169,8 @@ fluxo de tela por branch, e o app funcionar sem internet enviando os dados quand
 ## M-080 — Início, ícone e fonte alinhados ao design aprovado
 
 **Data:** 23/11/2026 · **Origem:** pedido direto do PO, com capturas da rc.18 ("o design está fora
-do escopo do Open Design") e a imagem do Início esperado · **PR (pulseira-verde-mobile):**
-feature/layout-alinhamento-design
+do escopo do Open Design") e a imagem do Início esperado · **PRs (pulseira-verde-mobile):**
+#14 (feature/layout-alinhamento-design) e #15 (bugfix/cobertura-sonar-layout)
 
 ### Contexto
 
@@ -4180,10 +4195,16 @@ feature/layout-alinhamento-design
   - Card: tipo, distância ou "você está aqui", estrelas, nota, avaliações e espera.
 - **Detalhe:** botão Compartilhar no topo.
 - **Tempos:** "45 min" e "1 h 30" no lugar dos formatos anteriores.
+- **Sonar (PR #15):** depois do merge do #14, a cobertura do código novo ficou em 80,2%, abaixo
+  dos 90%, por causa das linhas de `assets/icon-src/gerar_icone.js`, um script de uso único que
+  gera a arte do ícone e não roda no app. O #15 pôs `assets/icon-src/**` em
+  `sonar.coverage.exclusions` e somou 2 testes: hospital sem coordenada vai para o fim da lista,
+  e Compartilhar funciona sem nota.
 
 ### Verificação
 
-- 73 suítes e 945 testes passando; cobertura do código alterado em 100%.
+- 73 suítes e 942 testes passando; cobertura do código alterado em 100%. O PR #15 tirou o gerador
+  do ícone da conta do Sonar e somou 2 testes.
 - Testes novos: mapa do Início, filtro de 5 km com e sem GPS, avatar, Compartilhar e o hook de
   check-in do detalhe (`useCheckinNoHospital`), que antes só era coberto pela lista do Início.
 
