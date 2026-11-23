@@ -4087,6 +4087,21 @@ registro · **Origem:** ajustes que vieram depois do M-077, com os repositórios
 
 ---
 
+## Plano — Liberação dos mapas por região (sem código, sem número M)
+
+**Data:** 21 e 22/11/2026 (merge em 22/11/2026, 21:00 BRT) · **Origem:** pedido direto do PO ·
+**PR:** pulseira-verde-docs #5
+
+- Entrou só o plano [`Plano-Liberacao-Mapas-por-Regiao-v1.0.md`](../02-arquitetura-tecnica/Plano-Liberacao-Mapas-por-Regiao-v1.0.md)
+  e o ADR-018 (proposto) em `08-analise tecnica/adrs.md`: o app passa a ser liberado por região,
+  UF, município ou área em círculo, vale a regra mais específica e o padrão é fechado.
+- Decisões do PO de 22/11/2026: começar pelo Pedregal (Novo Gama), depois o DF, com o DF
+  desligável no painel e o liga/desliga de cada estabelecimento por região.
+- Fica sem número M porque não houve entrega: a melhoria nasce quando os PRs de backend, painel
+  e app forem feitos. Por isso também não entrou no De-Para.
+
+---
+
 ## M-079 — Layout novo do app e funcionamento offline total
 
 **Data:** 21 a 23/11/2026 · **Origem:** pedido direto do PO (migrar o app para o layout novo, um
