@@ -1425,6 +1425,31 @@ para os APKs já instalados.
 - O catálogo no app sai do AsyncStorage para um arquivo por UF, e o mapa ganha agrupamento de
   marcadores (SP e MG passam de 7 mil pontos).
 
+## ADR-018: Liberação do app por região, estado, município e área
+
+**Data:** 2026-11-22
+**Status:** Proposto — o PO decidiu L1 e L3 em 22/11/2026 (Pedregal primeiro, DF depois, DF desligável no painel, liga/desliga por estabelecimento); L2, L4 e L5 com a recomendação; amplia o ADR-017
+**Área:** Backend, Painel Admin e App
+**Plano completo:** [`02-arquitetura-tecnica/Plano-Liberacao-Mapas-por-Regiao-v1.0.md`](../02-arquitetura-tecnica/Plano-Liberacao-Mapas-por-Regiao-v1.0.md)
+
+### Contexto e Problema
+
+O ADR-017 libera o app estado a estado. O PO quer liberar também uma região inteira (o Norte), um
+município (Goiânia) ou um pedaço de município (o Pedregal, em Novo Gama/GO), pelo painel.
+
+### Decisão proposta
+
+Regras de liberação por nível (região, UF, município, área em círculo e estabelecimento), com `LIBERAR` e `BLOQUEAR`,
+em que vale a mais específica e o padrão é fechado. O filtro roda na montagem do catálogo da UF; nada
+é gravado no hospital. Importar e liberar são passos separados.
+
+### Consequências
+
+- O catálogo por UF do ADR-017 continua; o servidor entrega só o que a regra abre.
+- O check-in novo em lugar fechado passa a ser recusado pelo servidor (409); saída e sinal de visita
+  aberta continuam aceitos.
+- Hospitais ganham o código do município do IBGE; o backend embute a tabela de localidades.
+
 ---
 
 ## Resumo de Status
@@ -1447,6 +1472,7 @@ para os APKs já instalados.
 | ADR-014 | Leaflet para o mapa do Painel Admin | Média | Em andamento (25/09/2026) | Médio |
 | ADR-015 | Escala da infraestrutura para a população do DF | Alta | Proposto (08/10/2026) | Alto |
 | ADR-017 | Catálogo de estabelecimentos por UF (lançamento nacional) | Alta | Aceito (13/11/2026), não iniciado | Alto |
+| ADR-018 | Liberação por região, UF, município e área | Alta | Proposto (22/11/2026) | Alto |
 
 > Os ADR-001 a ADR-010 continuam `Proposto`. **`Aceito`: ADR-011** (infraestrutura,
 > backend), **ADR-012** (frontend do painel admin) e **ADR-014** (biblioteca de mapa do
