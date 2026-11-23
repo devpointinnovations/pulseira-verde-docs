@@ -5,6 +5,13 @@
 
 ---
 
+## 📌 Revisão 23/11/2026 — Homologação do backend v1.0.0-rc.18
+
+**O que entrou:** registro da rc do backend que leva a visita ativa única (#6, M-081), o teste de arquitetura e as fachadas entre módulos (#7 e #8, M-082 e M-083), as regras de monitoramento do E8-06 (#9, M-084) e o `user` sem documents de visita e feedback (#10): [`homologacoes/backend-v1.0.0-rc.18.md`](./10-git-flow/homologacoes/backend-v1.0.0-rc.18.md). O prefixo `backend-` existe porque o número rc.18 já tem o registro do app. O app continua na rc.19.
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (registro de rc).
+
+---
+
 ## 📌 Revisão 23/11/2026 — E8-06: regras de alerta e painel de latência por rota
 
 **O que entrou:** registro da parte portátil do E8-06 (pulseira-verde-backend #9, M-084). Regras do Prometheus e painel do Grafana por rota, em `monitoramento/` no backend, testados no CI com `promtool`. São portáteis porque a infraestrutura vai sair do Cloud Run para a Oracle (decisão do PO, 23/11/2026).
