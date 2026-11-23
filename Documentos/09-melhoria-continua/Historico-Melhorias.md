@@ -4183,7 +4183,8 @@ feature/layout-alinhamento-design
 
 ### Verificação
 
-- 73 suítes e 945 testes passando; cobertura do código alterado em 100%.
+- 73 suítes e 942 testes passando; cobertura do código alterado em 100%. O PR #15 tirou o gerador
+  do ícone da conta do Sonar e somou 2 testes.
 - Testes novos: mapa do Início, filtro de 5 km com e sem GPS, avatar, Compartilhar e o hook de
   check-in do detalhe (`useCheckinNoHospital`), que antes só era coberto pela lista do Início.
 
