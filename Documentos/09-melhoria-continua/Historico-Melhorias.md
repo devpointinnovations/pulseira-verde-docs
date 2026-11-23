@@ -4084,3 +4084,67 @@ registro · **Origem:** ajustes que vieram depois do M-077, com os repositórios
   e o critério dele (erro forçado no APK de homologação aparecer no Sentry) depende disso.
 - As chaves dos projetos no SonarQube Cloud continuam com os nomes antigos; trocar é decisão do
   PO.
+
+---
+
+## M-079 — Layout novo do app e funcionamento offline total
+
+**Data:** 21 a 23/11/2026 · **Origem:** pedido direto do PO (migrar o app para o layout novo, um
+fluxo de tela por branch, e o app funcionar sem internet enviando os dados quando a rede voltar)
+· **PRs (pulseira-verde-mobile):** #6, #9, #10, #11, #7 e #8
+
+### Contexto
+
+- O layout novo é a proposta Open Design aprovada pelo PO, com o logo B escolhido em 16/11.
+- Antes dele, o app usava a paleta azul e a navegação Início/Hospitais/Mapa/Perfil.
+- A fila offline (OPS-05) cobria só check-in e checkout automáticos. Sem rede, o check-in
+  manual e o "Não estou aqui" ficavam pausados em memória e nunca chegavam à fila. A avaliação
+  e o consentimento se perdiam.
+
+### O que mudou
+
+- **#6, fundação:** paleta verde nos tokens (primária `#0B6B4F`) e tab bar Início, Ranking,
+  Visitas e Perfil, com uma pilha por aba. A tela de apresentação antiga saiu.
+- **#9, Início e visita:** busca, filtros e cards novos em "Perto de você", aviso da visita no
+  topo e a tela "Visita em andamento". O checkout manual foi centralizado em
+  `useEncerrarVisitaManual`.
+- **#10, hospital e avaliação:** detalhe com nota, espera, Como chegar, Ligar, E-mail e
+  "Estou aqui agora". O check-in manual tem as regras num hook só, `useCheckinNoHospital`. A
+  avaliação ganhou barra de etapas, "Pular" e um rodapé sobre o anonimato.
+- **#11, Visitas, Ranking e Perfil:** Ranking por melhor nota ou menor espera, Suas visitas com
+  a nota de cada visita, Perfil em grupos e selo de avaliações pendentes na aba Visitas.
+- **#7, offline total:**
+  - O cache do TanStack Query fica gravado no aparelho.
+  - As consultas rodam em `offlineFirst` e as mutações em `always`.
+  - Avaliação, edição de avaliação, sugestão de hospital e consentimento vão para a fila offline
+    (`envioComFila`), com chave por item para a versão nova substituir a antiga.
+  - Um aviso de conexão aparece acima das abas.
+  - Não houve mudança no backend, que já era idempotente.
+- **#8, onboarding:**
+  - Apresentação de 3 telas na primeira abertura, com o motivo antes de cada pedido de
+    permissão.
+  - Antes do fim da apresentação, o geofencing só confere a permissão, sem abrir o pedido do
+    sistema.
+- **Como funciona:** o Perfil reabre a apresentação, que volta ao Perfil ao terminar (PR #12,
+  depois do #8).
+
+### Verificação
+
+- `develop` em 1489a11, depois do merge dos seis PRs: 71 suítes e 932 testes passando.
+- SonarQube Cloud aprovado nos seis PRs, com 94,8% a 100% de cobertura no código novo.
+- No #8, o Sonar apontou a regra S9383 (promessa sem tratamento em `App.js`), corrigida antes do
+  merge.
+- Todos os commits saíram assinados pelo desktop do PO.
+
+### O que ficou de fora
+
+- Diferenças em relação ao desenho, decididas na migração:
+  - O mapa fica a um toque, não atrás de uma lista arrastável.
+  - O anel dos minutos é um círculo inteiro.
+  - "Não estou neste hospital" aparece só no check-in manual.
+  - "Como as pessoas avaliaram" não entrou: a API não tem nota por dimensão.
+  - A avaliação mantém as etapas agrupadas, em vez de uma pergunta por tela.
+- Sem rede continuam fora: login, cadastro, recuperação de senha, exportação e exclusão de
+  conta. O mapa mostra só os blocos já vistos.
+- Ícone e splash com a arte final do logo B.
+- Homologação rc.18, que fica com o PO.
