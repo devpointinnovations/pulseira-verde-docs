@@ -5,6 +5,13 @@
 
 ---
 
+## 📌 Revisão 23/11/2026 — Plano de TypeScript e proposta de Design System do app
+
+**O que entrou:** a pedido do PO, dois documentos para análise. [`02-arquitetura-tecnica/Plano-Migracao-TypeScript-App-v1.0.md`](./02-arquitetura-tecnica/Plano-Migracao-TypeScript-App-v1.0.md) mede o app (98 arquivos de produção em JS, `checkJs: false`, typecheck que hoje não verifica nada), confirma que o painel já é TypeScript e propõe seis fases (fundação, base, estado e serviços, Design System, telas por feature, endurecimento) com estimativa de 13 a 15 dias, riscos, critérios de aceite e rollback. [`03-ui-ux/Proposta-Design-System-App-v1.0.md`](./03-ui-ux/Proposta-Design-System-App-v1.0.md) parte dos tokens e dos 12 componentes `CS*` existentes e propõe tokens em três camadas, catálogo de componentes com variantes e estados, acessibilidade, estrutura de pastas, Storybook web e a migração das telas, alinhados ao Open Design aprovado. Sem código; cinco perguntas ao PO no fim do documento do Design System.
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (planos, sem entrega).
+
+---
+
 ## 📌 Revisão 23/11/2026 — Homologação v1.0.0-rc.19
 
 **O que entrou:** registro da rc que alinha o app ao design aprovado: ícone e abertura com o logo B, fonte Inter, Início com o mapa no topo e cards sem o botão Check-in (pulseira-verde-mobile #14 e #15, M-080). É só do app: o backend continua o da rc.17. O roteiro confere o ícone, a fonte e o Início novo, e remete ao roteiro da rc.18. Em [`10-git-flow/homologacoes/v1.0.0-rc.19.md`](./10-git-flow/homologacoes/v1.0.0-rc.19.md).
