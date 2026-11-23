@@ -5,6 +5,13 @@
 
 ---
 
+## 📌 Revisão 23/11/2026 — Auditoria de arquitetura e padrões
+
+**O que entrou:** a pedido do PO, a [`Auditoria-Arquitetura-Padroes-v1.0.md`](./08-analise%20tecnica/Auditoria-Arquitetura-Padroes-v1.0.md) mede nos quatro repositórios qual estilo o sistema segue: monólito Spring Boot em camadas (MVC) organizado por funcionalidade, com um evento em memória e jobs agendados; app offline-first com TanStack Query e Zustand; painel Angular 21 standalone e zoneless. Não é SOA, microsserviços, hexagonal, CQRS nem DDD tático. Traz a tabela padrão × evidência × aderência, as divergências com os ADRs (status de ADR-001 a ADR-010 desatualizado, ADR-016 ausente, motivo vencido do `--max-instances=1`) e dez recomendações priorizadas, com destaque para o check-in que pode duplicar visita ativa, os ciclos entre módulos do backend e as escritas sem transação. Sem código.
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (auditoria, sem entrega).
+
+---
+
 ## 📌 Revisão 23/11/2026 — Plano de TypeScript e proposta de Design System do app
 
 **O que entrou:** a pedido do PO, dois documentos para análise. [`02-arquitetura-tecnica/Plano-Migracao-TypeScript-App-v1.0.md`](./02-arquitetura-tecnica/Plano-Migracao-TypeScript-App-v1.0.md) mede o app (98 arquivos de produção em JS, `checkJs: false`, typecheck que hoje não verifica nada), confirma que o painel já é TypeScript e propõe seis fases (fundação, base, estado e serviços, Design System, telas por feature, endurecimento) com estimativa de 13 a 15 dias, riscos, critérios de aceite e rollback. [`03-ui-ux/Proposta-Design-System-App-v1.0.md`](./03-ui-ux/Proposta-Design-System-App-v1.0.md) parte dos tokens e dos 12 componentes `CS*` existentes e propõe tokens em três camadas, catálogo de componentes com variantes e estados, acessibilidade, estrutura de pastas, Storybook web e a migração das telas, alinhados ao Open Design aprovado. Sem código; cinco perguntas ao PO no fim do documento do Design System.
