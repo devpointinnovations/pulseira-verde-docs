@@ -4263,3 +4263,83 @@ do escopo do Open Design") e a imagem do Início esperado · **PRs (pulseira-ver
 
 - Check-in anônimo num aparelho que tem visita logada ativa continua lendo a visita pelo
   aparelho (comportamento anterior, não tocado aqui).
+
+## M-082 — Teste de arquitetura impede novos ciclos e acessos diretos entre módulos
+
+**Data:** 23/11/2026 · **Origem:** risco P2 (R3) da auditoria de arquitetura de 23/11/2026
+([Auditoria-Arquitetura-Padroes-v1.0.md](../08-analise%20tecnica/Auditoria-Arquitetura-Padroes-v1.0.md)
+§4.2 e §8), por pedido direto do PO · **PR (pulseira-verde-backend):** #7
+(feature/teste-arquitetura-modulos)
+
+### Contexto
+
+- Os módulos de `br.com.saude_monitor.api` formavam ciclos (`auth ⇄ user`, `feedback ⇄ visita`,
+  `feedback ⇄ indicador`, `hospital ⇄ indicador`, `config ⇄ user/visita`) e os serviços liam
+  `repository` e `document` de outro módulo. Nada no CI impedia mais um.
+
+### O que mudou
+
+- **`ArquiteturaModulosTest`** (ArchUnit 1.4.1, só `testImplementation`) com três regras sobre os
+  módulos de primeiro nível: sem ciclos entre módulos; classes de `repository` só usadas pelo
+  próprio módulo; o mesmo para `document`.
+- **Exceções congeladas** com `FreezingArchRule` em `src/test/resources/archunit_store/`, no
+  estado de 23/11/2026: 28 arestas de ciclo, 42 usos de `repository` alheio e 221 usos de
+  `document` alheio. O arquivo só deve encolher. `archunit.properties` trava
+  `allowStoreCreation=false` e `refreeze=false`: o CI nunca cria nem atualiza exceção em
+  silêncio, e violação nova deixa o teste vermelho.
+- **ArchUnit e não Spring Modulith:** `ApplicationModules.verify()` pede declarar módulos e,
+  na prática, reorganizar pacotes. Com ArchUnit nada muda na estrutura e a lista de exceções
+  vira um arquivo versionado e explícito.
+- **Regra de ciclos própria, no lugar de `slices().beFreeOfCycles()`:** a descrição dos ciclos
+  que o ArchUnit gera muda a cada execução (o store de 6.125 linhas já falhou na segunda
+  rodada). A regra própria dá uma violação por aresta de módulo que fecha ciclo, estável entre
+  execuções.
+
+### Verificação
+
+- Suíte local: 616 testes, 0 falhas, `jacocoTestCoverageVerification` aprovada. Uma violação
+  nova introduzida de propósito derrubou o teste, e foi desfeita. Checks do PR: Backend
+  (Spring Boot), SonarCloud, CodeQL e a trava de contagem de testes passaram.
+
+### O que ficou de fora
+
+- Nenhuma mudança em código de produção; as exceções antigas continuam (ver M-083).
+
+---
+
+## M-083 — Fachadas de consulta no lugar de repository de outro módulo
+
+**Data:** 23/11/2026 · **Origem:** risco P2 (R3) da auditoria de arquitetura, segunda etapa, por
+pedido direto do PO · **PR (pulseira-verde-backend):** #8
+(feature/fachadas-consulta-modulos)
+
+### Contexto
+
+- Depois do M-082, 42 usos de `repository` de outro módulo estavam congelados como exceção:
+  `AuthServiceImpl`, `CustomUserDetailsService` e `AutenticacaoHelper` liam o `UserRepository`;
+  `FeedbackServiceImpl` e `IndicadorServiceImpl` liam `VisitaRepository`, `HospitalRepository` e
+  `FeedbackRepository`; `VisitaServiceImpl` lia o `HospitalRepository`.
+
+### O que mudou
+
+- **Quatro fachadas finas** no pacote `service` do módulo dono, que só delegam ao repository do
+  próprio módulo, com os métodos que os chamadores já usavam: `HospitalConsulta`,
+  `VisitaConsulta`, `FeedbackConsulta` e `UsuarioConsulta`. `UsuarioConsulta` também expõe
+  `save`, porque o auth grava senha e confirmação de e-mail; é só delegação.
+- Os seis serviços só trocaram o tipo e o nome do campo. Nenhum endpoint, DTO, evento ou
+  comportamento mudou, e o cache do usuário autenticado ficou como estava.
+- **Exceções antes → depois:** `repository` de outro módulo 42 → **0** (o arquivo do store ficou
+  vazio, só com remoções); `document` de outro módulo 221 → 221; ciclos 28 arestas → 28.
+
+### Verificação
+
+- Testes unitários passaram a mockar as fachadas, sem remover nem desabilitar nenhum. A trava de
+  contagem de testes exigiu mais testes (base 616, PR 616), e entraram 12 testes de delegação,
+  um por método das fachadas. Suíte local: 616 testes e 0 falhas antes dos novos 12; checks do
+  PR todos verdes depois: Backend (Spring Boot), SonarCloud, CodeQL e trava de contagem.
+
+### O que ficou de fora
+
+- Os 221 usos de `document` de outro módulo e os 28 ciclos seguem como exceção conhecida. Os
+  ciclos dependem também dos `document`; o próximo passo está na seção de estado da R3 da
+  auditoria.
