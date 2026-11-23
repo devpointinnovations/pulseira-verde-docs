@@ -160,7 +160,7 @@ FeedbackServiceImpl.salvar ──publishEvent(FeedbackSalvoEvent)──▶ Feedb
 - **Atualização condicional atômica:** checkout e heartbeat usam `Update` condicionado ao status ativo (`atualizarSeAtiva`), bom padrão para um documento só.
 - **Trava distribuída** por upsert com `_id` único (`config/trava/TravaDistribuida.java`), usada no seed e nos jobs: correta para mais de uma instância.
 - **Sem transação em escrita de vários documentos:** `UserServiceImpl.excluirConta` (linhas 189-204) anonimiza visitas e feedbacks (`updateMulti`) e **só depois** apaga a conta. A ordem é a segura: se cair no meio, a conta continua existindo, o pedido devolve erro e repetir a exclusão termina o trabalho (o `updateMulti` é idempotente). A proteção vem da ordem, não de uma transação, e não há teste que a fixe.
-- **Check-in com verificar-e-gravar:** `VisitaServiceImpl.checkin` busca a visita ativa (linhas 121-125) e só depois grava (linha 159). Os índices de `VisitaDocument` (linhas 33-41) não têm índice único parcial por usuário/dispositivo com status ativo.
+- **Check-in com verificar-e-gravar:** `VisitaServiceImpl.checkin` busca a visita ativa (linhas 121-125) e só depois grava (linha 159). Os índices de `VisitaDocument` (linhas 33-41) não têm índice único parcial por usuário/dispositivo com status ativo. **Corrigido em 23/11/2026** (R2, backend #6): índices únicos parciais criados no startup por `VisitaAtivaUnicaRunner`, e o check-in que perde a corrida devolve a visita ativa.
 
 ### 4.5 Segurança como parte da arquitetura
 
@@ -232,7 +232,7 @@ O maior arquivo é `screens/visitas/service/GeofencingTaskService.js` com **1.12
 
 | Prior. | ID | Risco / dívida | Evidência | Recomendação | Esforço |
 |:---:|---|---|---|---|:---:|
-| **P1** | R2 | Duas visitas ativas para a mesma pessoa sob concorrência (geofencing + fila offline + toque manual) | `VisitaServiceImpl.java:121-160`; índices em `VisitaDocument.java:33-41` | Índice único parcial em `usuarioId` e outro em `dispositivoId` com `status ∈ {EM_ATENDIMENTO, SUSPEITA}`, tratando `DuplicateKeyException` como "devolve a ativa" | Baixo |
+| **P1** | R2 | Duas visitas ativas para a mesma pessoa sob concorrência (geofencing + fila offline + toque manual) | `VisitaServiceImpl.java:121-160`; índices em `VisitaDocument.java:33-41` | Índice único parcial em `usuarioId` e outro em `dispositivoId` com `status ∈ {EM_ATENDIMENTO, SUSPEITA}`, tratando `DuplicateKeyException` como "devolve a ativa" | Baixo <br>✅ **Corrigido em 23/11/2026** (backend #6, M-081) |
 | **P2** | R3 | Ciclos e acesso a repositório alheio: mudança num módulo quebra outro sem aviso; impede extrair um módulo no futuro | §4.2 | Cada módulo expõe uma fachada (`VisitaConsulta`, `HospitalConsulta`…) e só ela é importada de fora; teste de arquitetura (ArchUnit ou Spring Modulith `ApplicationModules.verify()`) no CI para impedir regressão | Médio |
 | **P2** | R4 | Estado na instância impede escalar: rate limit em memória e `max=1` com motivo vencido | `RateLimitService.java:57`; D6 | Decidir no ADR-015 o caminho do rate limit (borda/Cloudflare ou Mongo) e só então subir `max-instances`; atualizar o comentário do CD | Médio |
 | **P2** | R5 | Contrato da API duplicado à mão em JS e TS, sem teste de contrato | P21 | Gerar os tipos do painel a partir do `/v3/api-docs` (`openapi-typescript`) no CI e, com o ADR-010, no app; publicar o `openapi.json` como artefato do backend | Médio |

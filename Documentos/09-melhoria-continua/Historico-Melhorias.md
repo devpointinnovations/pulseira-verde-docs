@@ -4213,3 +4213,53 @@ do escopo do Open Design") e a imagem do Início esperado · **PRs (pulseira-ver
 - "Como as pessoas avaliaram", com uma barra por dimensão: a API de indicadores não devolve
   nota por dimensão. Fica para um PR de backend.
 - No Ranking, a pílula do estado e o chip UPA: o filtro de tipo da API é só a natureza.
+
+## M-081 — Uma só visita ativa por pessoa, garantida pelo banco
+
+**Data:** 23/11/2026 · **Origem:** risco P1 (R2) da auditoria de arquitetura de 23/11/2026
+([Auditoria-Arquitetura-Padroes-v1.0.md](../08-analise%20tecnica/Auditoria-Arquitetura-Padroes-v1.0.md)
+§4.4 e §8), por pedido direto do PO · **PR (pulseira-verde-backend):** #6
+(bugfix/checkin-visita-ativa-unica)
+
+### Contexto
+
+- O check-in lia a visita ativa da pessoa e só depois gravava a nova. Dois pedidos ao mesmo
+  tempo (geofence, fila offline e toque manual) podiam passar os dois pela leitura vazia e
+  gravar duas visitas ativas para a mesma pessoa.
+- O banco não tinha nada que impedisse isso: nenhum índice único sobre a visita ativa.
+
+### O que mudou
+
+- **Dois índices únicos parciais** na coleção `visitas`, só para status `EM_ATENDIMENTO` e
+  `SUSPEITA`:
+  - `uk_visita_ativa_usuario`: um por `usuarioId` (visita logada);
+  - `uk_visita_ativa_dispositivo`: um por `dispositivoId`, só na visita anônima. A visita
+    logada também guarda o aparelho, e o mesmo aparelho pode trocar de conta; a visita
+    anonimizada na exclusão de conta perde o aparelho e fica fora do índice.
+- **Check-in que perde a corrida:** o banco recusa a gravação (`DuplicateKeyException`) e o
+  check-in devolve a visita que venceu, como a idempotência que já existia (HTTP 200 no mesmo
+  hospital, 409 em outro).
+- **Migração segura no startup** (`VisitaAtivaUnicaRunner`): os índices não ficam em
+  `@CompoundIndex`, porque o auto-index do Spring Data roda antes de qualquer migração e
+  derrubaria o deploy se o banco já tivesse duplicadas. O runner primeiro encerra as
+  duplicadas antigas como `EXPIRADA` (fica a de entrada mais recente; `EXPIRADA` não entra no
+  indicador), depois cria os índices. Se a criação falhar, registra erro e tenta de novo no
+  próximo boot, sem derrubar o serviço.
+- O runner tenta até 3 vezes (limpeza e criação), caso um check-in duplicado caia no meio.
+- Filtro parcial com `$in` e `usuarioId: null` conferido no MongoDB 7.0 (o mesmo dos testes e
+  do Percona local).
+
+### Verificação
+
+- Teste de integração contra MongoDB real (Testcontainers): 12 check-ins simultâneos do mesmo
+  usuário e do mesmo aparelho anônimo geram uma só visita ativa, e todos recebem a mesma; o
+  banco recusa a segunda visita ativa e aceita uma nova depois da anterior encerrada; o mesmo
+  aparelho pode ter uma visita anônima e uma logada; o runner expira a duplicada antiga,
+  mantém a recente e cria os dois índices.
+- Testes unitários do check-in que perde a corrida: devolve a vencedora, dá 409 se a vencedora
+  for de outro hospital e 409 se ela já tiver sido encerrada.
+
+### O que ficou de fora
+
+- Check-in anônimo num aparelho que tem visita logada ativa continua lendo a visita pelo
+  aparelho (comportamento anterior, não tocado aqui).
