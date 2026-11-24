@@ -4512,7 +4512,7 @@ mudar endpoint, JSON nem comportamento:
 | #19 | `f1a06d0` | `FeedbackSalvoEvent` vai para o `feedback` (quem publica) e `RetencaoDadosPessoaisJob` para o módulo `jobs` | 16 → 15 |
 | #20 | `33a3dd0` | carga de massa vira o módulo `seed`, que depende dos demais e de que ninguém depende; o `feedback` ganha `FeedbackMassa` (dev) | 15 → 9 |
 | #21 | `b5e3d3a` | `hospital` lê os indicadores pela porta `IndicadoresDosHospitais`; o endpoint `GET /api/v1/hospitais/{id}/indicadores` vai para o módulo `indicador`, com o mesmo caminho e o mesmo grupo do OpenAPI | 9 → 2 |
-| #22 | em revisão | `user` envia o código de confirmação do e-mail pela interface `EnvioDeConfirmacaoDeEmail`, que o `auth` implementa | 2 → **0** |
+| #22 | `382080e` | `user` envia o código de confirmação do e-mail pela interface `EnvioDeConfirmacaoDeEmail`, que o `auth` implementa | 2 → **0** |
 
 ### Verificação
 
@@ -4520,10 +4520,38 @@ mudar endpoint, JSON nem comportamento:
   testes, com testes novos; os testes de contrato do OpenAPI passaram no #21. O #19 teve uma falha
   transitória de container do Mongo na suíte local (passou isolado e a suíte do CI passou), registrada
   no próprio PR.
-- Esteiras do merge dos PRs #18 a #21 lidas e verdes; as do #22 serão lidas no merge.
+- Esteiras do merge dos PRs #18 a #22 lidas e verdes.
 
 ### Resultado da R3 no backend
 
 `ArquiteturaModulosTest` (ArchUnit) com as três regras (ciclos entre módulos, `repository` e
 `document` privados do módulo) e **nenhuma exceção congelada**: `repository` 42 → 0, `document`
-221 → 0 e ciclos 28 → 0 (este último com o #22 em revisão).
+221 → 0 e ciclos 28 → 0.
+
+## M-088 — Records de resposta com `@Builder`, em todos os módulos do backend
+
+**Data:** 24/11/2026 · **Origem:** padrão do PO (M-086), aplicado aos records antigos · **PR
+(pulseira-verde-backend):** #23, merge `c27c8c6`
+
+### Contexto
+
+- O M-086 definiu que record novo nasce com `@Builder` do Lombok. Os records antigos de resposta e de
+  dados seguiam criados por `new` com três ou mais argumentos, em ordem posicional, fácil de trocar
+  dois campos do mesmo tipo sem o compilador avisar.
+
+### O que mudou
+
+- 26 records ganharam `@Builder` e os 37 pontos de criação em `main` (mais os dos testes) passaram a usar
+  `X.builder()...build()`: `visita/dto` (7), `config/exception` (`ApiError`), `configuracao/dto`,
+  `hospital/dto` (8), `hospital/migration`, `auth/dto` (3), `feedback/dto` (2), `user/dto` (2) e
+  `indicador/dto`. O construtor secundário de `ConfiguracaoRemotaResponse`, sem uso depois da troca,
+  saiu.
+- Sem mudança de endpoint, JSON, validação nem OpenAPI.
+
+### Verificação
+
+- `DtoBuilderContratoTest` cobre os 26 records: o `builder()` gera o mesmo objeto e o mesmo JSON (campos e
+  ordem) que o construtor, e o JSON volta ao mesmo objeto na leitura; `VisitaDtoJsonTest` fixa o JSON
+  exato dos DTOs de visita.
+- Suíte local, JaCoCo e os 8 checks do PR verdes; as quatro esteiras da `develop` no merge lidas e
+  verdes.
