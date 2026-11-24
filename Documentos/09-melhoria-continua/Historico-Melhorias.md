@@ -4555,3 +4555,20 @@ mudar endpoint, JSON nem comportamento:
   exato dos DTOs de visita.
 - Suíte local, JaCoCo e os 8 checks do PR verdes; as quatro esteiras da `develop` no merge lidas e
   verdes.
+
+## M-089 — Controlador dos dados passa a ser a Dev Point Innovations LTDA
+
+**Data:** 24/11/2026 · **Origem:** pedido do PO: o detentor do código e controlador dos dados é a empresa, não
+mais a pessoa física · **PRs:** pulseira-verde-mobile (tela Privacidade e Termos e teste) e
+pulseira-verde-docs (Política, Termos e página de exclusão de conta do site)
+
+### O que mudou
+
+- Seção "1. Quem cuida dos seus dados" do app, a Política de Privacidade, os Termos de Uso e a página de
+  exclusão de conta deixam de citar Gabriel Vogado como controlador/mantenedor e passam a citar a Dev Point
+  Innovations LTDA. O e-mail de contato (`privacidade@saudemonitor.dev`) não mudou.
+- Não alterado: autoria dos commits e créditos de autoria/PO em documentos internos.
+
+### Pendente
+
+- CNPJ e endereço da empresa não constam dos textos; entram quando o PO fornecer.
