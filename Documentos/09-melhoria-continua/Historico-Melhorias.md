@@ -4571,7 +4571,7 @@ pulseira-verde-docs (Política, Termos e página de exclusão de conta do site)
   traz também o endereço da sede.
 - Não alterado: autoria dos commits e créditos de autoria/PO em documentos internos.
 
-## M-089 — Início: busca e seleção de hospital no mapa, com folha de 3 alturas
+## M-091 — Início: busca e seleção de hospital no mapa, com folha de 3 alturas
 
 **Data:** 24/11/2026 · **Origem:** relato do PO (hospital buscado ou escolhido não aparecia no mapa, toque no pin abria o mapa completo e a alça da lista não fazia nada) · **PR (pulseira-verde-mobile):** #18 · **Proposta:** [Proposta-UX-Busca-Hospital-Mapa-Inicio-v1.0](../03-ui-ux/Proposta-UX-Busca-Hospital-Mapa-Inicio-v1.0.md), Opção B
 

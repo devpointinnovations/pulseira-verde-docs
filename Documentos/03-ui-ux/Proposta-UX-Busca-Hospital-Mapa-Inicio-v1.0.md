@@ -1,6 +1,6 @@
 # Proposta de UX: busca e seleção de hospital no mapa do Início (v1.0)
 
-Data: 24/11/2026 · Pedido do PO · Status: **Opção B escolhida pelo PO em 24/11/2026 e implementada ([M-089](../09-melhoria-continua/Historico-Melhorias.md))**
+Data: 24/11/2026 · Pedido do PO · Status: **Opção B escolhida pelo PO em 24/11/2026 e implementada ([M-091](../09-melhoria-continua/Historico-Melhorias.md))**
 Repositório da tela: `pulseira-verde-mobile` (develop em `d3bd6db`). Referências visuais: `Padrao-UI-UX-v2.1.md` e protótipo Open Design.
 
 ## 1. O que o PO relatou
