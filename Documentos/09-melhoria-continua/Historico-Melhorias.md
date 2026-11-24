@@ -4567,8 +4567,6 @@ pulseira-verde-docs (Política, Termos e página de exclusão de conta do site)
 - Seção "1. Quem cuida dos seus dados" do app, a Política de Privacidade, os Termos de Uso e a página de
   exclusão de conta deixam de citar Gabriel Vogado como controlador/mantenedor e passam a citar a Dev Point
   Innovations LTDA. O e-mail de contato (`privacidade@saudemonitor.dev`) não mudou.
+- A Política e os Termos, e a tela do app, passam a trazer o CNPJ da empresa (50.018.375/0001-57); a Política
+  traz também o endereço da sede.
 - Não alterado: autoria dos commits e créditos de autoria/PO em documentos internos.
-
-### Pendente
-
-- CNPJ e endereço da empresa não constam dos textos; entram quando o PO fornecer.
