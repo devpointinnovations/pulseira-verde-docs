@@ -4570,3 +4570,32 @@ pulseira-verde-docs (Política, Termos e página de exclusão de conta do site)
 - A Política e os Termos, e a tela do app, passam a trazer o CNPJ da empresa (50.018.375/0001-57); a Política
   traz também o endereço da sede.
 - Não alterado: autoria dos commits e créditos de autoria/PO em documentos internos.
+
+## M-089 — Início: busca e seleção de hospital no mapa, com folha de 3 alturas
+
+**Data:** 24/11/2026 · **Origem:** relato do PO (hospital buscado ou escolhido não aparecia no mapa, toque no pin abria o mapa completo e a alça da lista não fazia nada) · **PR (pulseira-verde-mobile):** #18 · **Proposta:** [Proposta-UX-Busca-Hospital-Mapa-Inicio-v1.0](../03-ui-ux/Proposta-UX-Busca-Hospital-Mapa-Inicio-v1.0.md), Opção B
+
+### Contexto
+
+- O Início não guardava "hospital selecionado": tocar num card ia direto ao detalhe, a câmera ficava presa na pessoa (zoom 12,5) e só os 12 hospitais mais perto tinham pin.
+- O mapa do Início era só vista (`pointerEvents="none"`, por causa do BUG-04), então o pin não recebia toque e qualquer toque abria o mapa completo.
+- A alça de "Perto de você" era uma `View` estática de 40×4.
+
+### O que mudou
+
+- A folha tem três alturas (recolhida, meio, expandida), com arraste de verdade, toque na alça para alternar e ações de acessibilidade de aumentar e diminuir. A lista só rola com a folha expandida.
+- Lista, busca e pin fazem a mesma coisa: selecionam o hospital, recolhem a folha, enquadram a pessoa e o hospital no mapa (sem GPS, centralizam no hospital em zoom 14), destacam o pin e mostram um cartão com "Ver detalhes". Só esse botão (ou o próprio card) abre o detalhe, e o mapa sai da tela antes de navegar (BUG-04).
+- A busca ganhou até 5 sugestões sob o campo, com a distância quando há GPS, "buscar" no teclado escolhe a primeira e um X limpa o campo.
+- O botão de localização recentraliza na pessoa e limpa a seleção; o mapa completo ganhou botão próprio. Hospital sem coordenada seleciona e avisa "sem localização no mapa".
+- O pin do hospital selecionado aparece mesmo fora dos 12 mais perto. O cálculo do enquadramento (`calcularLimitesDoEnquadramento`) saiu da tela do mapa completo para `utils/geojson` e o `fitBounds` aceita margem por lado.
+
+### Verificação
+
+- Suíte completa do app (75 suítes, 984 testes) e ESLint sem erros; cobertura dos arquivos novos e alterados acima de 98% das linhas.
+- Testes novos: regras de parada da folha, arraste e acessibilidade, seleção por lista, busca e pin, enquadramento da câmera com e sem GPS, hospital sem coordenada e o mapa saindo da árvore antes de abrir o detalhe.
+
+### Limites
+
+- Tocar numa área vazia do mapa não limpa a seleção (o adaptador do mapa não expõe esse toque). Limpa-se pelo X do cartão ou pelo botão de localizar.
+- Não validado ainda em aparelho físico: arraste da folha e toque nos pins sobre o mapa nativo.
+
