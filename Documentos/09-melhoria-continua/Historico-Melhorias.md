@@ -4571,6 +4571,30 @@ pulseira-verde-docs (Política, Termos e página de exclusão de conta do site)
   traz também o endereço da sede.
 - Não alterado: autoria dos commits e créditos de autoria/PO em documentos internos.
 
+## M-092 — Início: folha limitada a 60% da tela e botão de localizar na faixa visível
+
+**Data:** 24/11/2026 · **Origem:** relato do PO ao testar a rc.20 no aparelho (lista escondida atrás da busca; botão de localizar "não centralizava") · **PR (pulseira-verde-mobile):** #21 · **Proposta:** [Proposta-UX-Busca-Hospital-Mapa-Inicio-v1.0](../03-ui-ux/Proposta-UX-Busca-Hospital-Mapa-Inicio-v1.0.md)
+
+### Contexto
+
+- A parada expandida da folha (M-091) ocupava 92% da tela e cobria a barra de busca.
+- O botão de localizar movia a câmera para o GPS, mas o centro do mapa fica atrás da folha: o ponto da pessoa ia parar escondido, e o botão parecia não fazer nada. Não era falha de GPS (a lista já mostrava as distâncias).
+
+### O que mudou
+
+- Paradas da folha: 20% (recolhida), 40% (meio) e 60% (expandida, teto). A busca nunca é coberta.
+- `setCamera` do adaptador do mapa (nativo e web) aceita `padding`; o botão de localizar o usa com as margens da busca e da folha na altura de agora, e a pessoa fica no meio da faixa visível. A margem inferior da câmera passou a seguir a altura atual da folha.
+
+### Verificação
+
+- Testes escritos antes da correção (vermelhos) e depois verdes: paradas e teto de 60%, `padding` nos dois adaptadores, `MapaPertoDeVoce` e o botão com a folha em cada altura. Suíte completa do app (75 suítes, 999 testes) e ESLint sem erros.
+
+### Limites
+
+- Sem posição (permissão negada), o botão continua levando a Brasília.
+- A primeira leitura do GPS ao abrir o app ainda centraliza sem o padding.
+- Não validado ainda em aparelho físico.
+
 ## M-091 — Início: busca e seleção de hospital no mapa, com folha de 3 alturas
 
 **Data:** 24/11/2026 · **Origem:** relato do PO (hospital buscado ou escolhido não aparecia no mapa, toque no pin abria o mapa completo e a alça da lista não fazia nada) · **PR (pulseira-verde-mobile):** #18 · **Proposta:** [Proposta-UX-Busca-Hospital-Mapa-Inicio-v1.0](../03-ui-ux/Proposta-UX-Busca-Hospital-Mapa-Inicio-v1.0.md), Opção B
