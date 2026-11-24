@@ -6,7 +6,7 @@
 > |---|---|
 > | **Versão** | 2.4 |
 > | **Status** | Contrato em validação — endpoints já implementados na `develop`; alterações refletidas neste documento e registradas por PR |
-> | **Data** | 07/08/2026 (última atualização: 05/11/2026) |
+> | **Data** | 07/08/2026 (última atualização: 24/11/2026 — campos opcionais da tendência no §2.5 e §3.5, E4-06) |
 > | **Base** | Árvore Tecnológica v2.1 (ADRs) · Documento Negocial v2.1 (RN) · Backlog v2.2 (Fase 0 + E1–E8) |
 > | **Padrão** | REST + JSON · OpenAPI 3.1 (geração automática a partir do código — E8-09 entregue) |
 > | **O que mudou na v2.4** | Novo `GET /api/v1/contas/feedbacks/pendentes` 🔒 (visitas do titular que ainda aceitam feedback). `POST /api/v1/feedbacks` passa a aceitar visita `GPS_INTERROMPIDO` (celular descarregado dentro do hospital) e recusa com 404 a visita cuja janela de 24h após a saída já fechou (RN-09). Versão anterior (2.3) preservada em `_historico/Especificacao-API-v2.3.md`. Ver [M-029](../09-melhoria-continua/Historico-Melhorias.md). |
@@ -206,11 +206,15 @@ A versão anterior (2.0) foi preservada em `_historico/Especificacao-API-v2.0.md
   "nVisitas": 34,
   "periodoInicio": "2026-05-10T00:00:00Z",
   "periodoFim": "2026-08-07T23:59:59Z",
-  "atualizadoEm": "2026-08-07T16:55:05Z"
+  "atualizadoEm": "2026-08-07T16:55:05Z",
+  "tendenciaNota": "SUBINDO",
+  "variacaoNota": 0.4,
+  "tendenciaPreliminar": true
 }
 ```
 
 - **Índices:** `{ "hospitalId": 1 }` unique.
+- **Tendência (E4-06, 24/11/2026):** no mesmo recálculo, a nota dos últimos 30 dias é comparada com a dos 30 anteriores (pela data de criação do feedback, com as mesmas regras da `notaMedia`). `variacaoNota` = atual − anterior, em duas casas; `tendenciaNota` = `ESTAVEL` quando a variação, em módulo, é menor que 0,3, senão `SUBINDO`/`CAINDO`; `tendenciaPreliminar` = algum dos períodos tem menos de 10 avaliações. Com menos de 5 avaliações em algum período, os três campos ficam `null`. Documentos gravados antes de 24/11/2026 não têm os campos até o próximo recálculo do hospital.
 - **Regras (RN-14..RN-19):** `notaMedia` = média aritmética das notas; `tempoMedianoMinutos` = mediana das durações de visitas FINALIZADA com `tipoPermanencia = ATENDIMENTO` e **≤ 24h** no período (filas de 12h+ do SUS entram na métrica; internação/observação saem — RN-16/RN-17/RN-24); exibir indicadores apenas se `nAvaliacoes >= 5` (o app/API omite quando abaixo); atualização em ≤ 15min via job.
 
 ---
@@ -532,10 +536,15 @@ Vide §3.1 — exclui conta e anonimiza dados (LGPD art. 18/19), recomputando os
   "tempoMedianoMinutos": 95,
   "nVisitas": 34,
   "periodo": { "inicio": "2026-05-10T00:00:00Z", "fim": "2026-08-07T23:59:59Z" },
-  "atualizadoEm": "2026-08-07T16:55:05Z"
+  "atualizadoEm": "2026-08-07T16:55:05Z",
+  "tendenciaNota": "SUBINDO",
+  "variacaoNota": 0.4,
+  "tendenciaPreliminar": true
 }
 ```
 Se `nAvaliacoes < 5`: `"indicadoresDisponiveis": false` e campos de média `null` (RN-15).
+
+> **Tendência simples (E4-06 — 24/11/2026):** `tendenciaNota` (`SUBINDO` | `ESTAVEL` | `CAINDO`), `variacaoNota` e `tendenciaPreliminar` são **opcionais** e vêm `null` quando não há tendência (menos de 5 avaliações em algum dos dois períodos de 30 dias), quando os indicadores estão indisponíveis (RN-15) ou quando o último recálculo do hospital tem mais de 30 dias (nenhum feedback entrou no período atual). Regras no §2.5. Só este endpoint traz a tendência: o `GET /api/v1/catalogo/indicadores` e o indicador embutido no detalhe do hospital não mudaram.
 
 > **Só avaliações verificadas (SEG-01 — 18/10/2026):** `nAvaliacoes`, `notaMedia`, `tempoMedianoMinutos` e `nVisitas` contam apenas visitas com prova de presença (ver `POST /visitas/checkin`) e os feedbacks dessas visitas. A avaliação de quem não comprovou presença continua aceita (RN-20), mas não entra no indicador.
 

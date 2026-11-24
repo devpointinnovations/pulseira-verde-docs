@@ -4599,3 +4599,28 @@ pulseira-verde-docs (Política, Termos e página de exclusão de conta do site)
 - Tocar numa área vazia do mapa não limpa a seleção (o adaptador do mapa não expõe esse toque). Limpa-se pelo X do cartão ou pelo botão de localizar.
 - Não validado ainda em aparelho físico: arraste da folha e toque nos pins sobre o mapa nativo.
 
+## M-090 — Tendência simples da nota no detalhe do hospital (E4-06)
+
+**Data:** 24/11/2026 · **Origem:** E4-06, última estória funcional do app ainda pendente (ficha das pendências de 13/11/2026); janela e limiar escolhidos pelo PO em 24/11/2026 · **PRs:** pulseira-verde-backend e pulseira-verde-mobile (`feature/E4-06-tendencia-simples`)
+
+### O que mudou
+
+- **Backend:** no mesmo recálculo do indicador (evento de feedback e job de 15 min), a nota dos últimos 30 dias é comparada com a dos 30 anteriores. Usa os feedbacks já lidos para a nota de 90 dias e já filtrados pela prova de presença (SEG-01), sem consulta nova ao banco. O cálculo fica em `TendenciaService` (funções puras).
+- Regras: variação = nota atual − nota anterior, em duas casas; abaixo de 0,3 em módulo é estável; com menos de 5 avaliações em algum período não há tendência; com menos de 10 em algum período a tendência é preliminar.
+- O documento `agregados_hospitais` ganha `tendenciaNota`, `variacaoNota` e `tendenciaPreliminar`, e o `GET /api/v1/hospitais/{id}/indicadores` os expõe como campos opcionais. A tendência é omitida quando o último recálculo tem mais de 30 dias, porque aí nenhum feedback entrou no período atual.
+- **App:** o detalhe do hospital mostra seta (sobe, estável, cai) e a frase "Nota subiu 0,4 em relação aos 30 dias anteriores", com o selo "Preliminar" quando for o caso. O leitor de tela lê a frase e o aviso de preliminar como um item só.
+
+### Decisões
+
+- Tendência só no endpoint dedicado, que é o que a tela de detalhe usa. O `GET /api/v1/catalogo/indicadores` (todos os hospitais numa resposta, a mesma para qualquer pessoa) não mudou, para não crescer sem que nenhuma tela da lista mostre a tendência.
+
+### Verificação
+
+- Backend: suíte completa com MongoDB em Testcontainers, 766 testes e 0 falhas (eram 736). `TendenciaService` com 100% de linhas e ramos.
+- App: suíte completa, 955 testes e 0 falhas (eram 945); `utils/indicadores.js` com 100% e `HospitalDetalheScreen.js` com 98% das linhas.
+
+### Limites
+
+- Entre um recálculo e outro (até 30 dias sem feedback novo no hospital), a tendência mostrada é a do último recálculo; o mesmo já acontece com a nota de 90 dias, porque o job só recalcula hospitais com atividade recente.
+- Hospitais sem atividade desde a entrega só ganham tendência no próximo feedback ou visita processada.
+

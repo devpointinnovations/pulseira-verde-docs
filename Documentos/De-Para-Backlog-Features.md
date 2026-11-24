@@ -12,9 +12,9 @@ Este documento estabelece o mapeamento direto entre as **Estórias de Usuário (
 
 | Escopo | Entregue | Total | % |
 |---|---|---|---|
-| Aplicativo (Fase 0 + Épicos 1–6) | 42 | 43 | **98%** |
+| Aplicativo (Fase 0 + Épicos 1–6) | 43 | 43 | **100%** |
 | Painel Administrativo Web (Épico 7) | 9 | 9 | 100% (✅ E7-01 a E7-09 entregues; E2E com login ADMIN pendente para E7-06 e E7-09) |
-| **Total do backlog** | **51** | **52** | **98%** |
+| **Total do backlog** | **52** | **52** | **100%** |
 | Épico 8 — Estabilização e Desempenho (novo, v2.1) | 8 | 15 | 53% |
 | Épico 9 — Escala, Segurança e Privacidade (novo, 18/10/2026) | 15 | 22 | 68% |
 
@@ -71,7 +71,7 @@ Este documento estabelece o mapeamento direto entre as **Estórias de Usuário (
 | **E4-03** | Detalhe público hospital | **F-06** | ✅ Existente (`/hospitais/{id}/indicadores` + tela) |
 | **E4-04** | Atualizar agregados 15min | **F-06** | ✅ Existente (job + evento) |
 | **E4-05** | Ranking hospitais | **F-06** | ✅ Existente — backend (PR #27: `GET /api/v1/hospitais/ranking` por NOTA/TEMPO + filtro de tipo + paginação) **e UI** (`RankingScreen`, S8) |
-| **E4-06** | Tendência simples | **F-06** | 🔴 **Pendente** — P2, sem sprint atribuída. **Única estória funcional do app ainda não entregue**; não bloqueia o lançamento |
+| **E4-06** | Tendência simples | **F-06** | ✅ Entregue em 24/11/2026 ([M-090](09-melhoria-continua/Historico-Melhorias.md)) — nota dos últimos 30 dias contra os 30 anteriores (decisão do PO), limiar de estabilidade 0,3, sem tendência com menos de 5 avaliações em algum período e selo "Preliminar" com menos de 10. Backend grava no recálculo e expõe em `GET /hospitais/{id}/indicadores` (`tendenciaNota`, `variacaoNota`, `tendenciaPreliminar`); app mostra seta e frase no detalhe do hospital. PRs `feature/E4-06-tendencia-simples` no backend e no mobile |
 
 ## Épico 5 — Conta, Consentimento e Privacidade
 | ID Backlog | Estória | Feature(s) Relacionada(s) | Status Implementação |
