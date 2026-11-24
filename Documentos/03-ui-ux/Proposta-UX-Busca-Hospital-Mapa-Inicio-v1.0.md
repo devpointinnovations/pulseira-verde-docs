@@ -1,6 +1,6 @@
 # Proposta de UX: busca e seleção de hospital no mapa do Início (v1.0)
 
-Data: 24/11/2026 · Pedido do PO · Status: **proposta, sem código; aguardando a escolha da opção**
+Data: 24/11/2026 · Pedido do PO · Status: **Opção B escolhida pelo PO em 24/11/2026 e implementada ([M-089](../09-melhoria-continua/Historico-Melhorias.md))**
 Repositório da tela: `pulseira-verde-mobile` (develop em `d3bd6db`). Referências visuais: `Padrao-UI-UX-v2.1.md` e protótipo Open Design.
 
 ## 1. O que o PO relatou
@@ -135,12 +135,12 @@ A alça e o título "Perto de você" são a área de arraste; a lista só rola c
 
 **Opção B.** Entrega o comportamento esperado de app de mapa (arrastar a folha, tocar no pin, ver o hospital antes do detalhe), usa padrões que o app já tem (cartão e câmera do mapa completo, bottom sheet do padrão UI/UX) e mantém o design aprovado. A Opção A serve se o PO preferir uma correção rápida e adiar o gesto.
 
-## 7. Decisões que dependem do PO
+## 7. Decisões do PO (24/11/2026)
 
-1. Qual opção implementar (A, B ou C)?
-2. Na lista, o primeiro toque **seleciona e mostra no mapa** (dois toques até o detalhe) ou **abre o detalhe direto**, deixando a seleção só para busca e pin? Recomendo selecionar primeiro, com "Ver detalhes" no cartão.
-3. O botão "localizar" passa a recentralizar na pessoa e o mapa completo vai para um botão próprio. Pode?
-4. A busca ganha lista de sugestões sob o campo (até 5)? Recomendo que sim.
-5. Hospital sem coordenada no catálogo: ao selecionar, mostrar o cartão com o aviso "sem localização no mapa". Pode?
+1. **Opção B** (folha de 3 alturas, cartão resumo e pins tocáveis).
+2. O primeiro toque na lista **seleciona e mostra no mapa**; "Ver detalhes" no cartão abre o detalhe.
+3. O botão de localizar recentraliza na pessoa; o mapa completo ganhou botão próprio.
+4. A busca ganhou sugestões sob o campo (até 5).
+5. Hospital sem coordenada: o cartão aparece com o aviso "sem localização no mapa".
 
-Nenhum código do app foi alterado. Depois da escolha, a implementação segue em PR próprio no `pulseira-verde-mobile` e um registro no De-Para e no Histórico de Melhorias.
+Diferenças entre o protótipo e o app: tocar numa área vazia do mapa não limpa a seleção (o adaptador do mapa não expõe o toque no mapa); limpa-se pelo X do cartão ou pelo botão de localizar. O pin do hospital da visita ativa só aparece se ele estiver entre os mais perto ou for o selecionado.
