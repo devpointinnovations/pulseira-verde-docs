@@ -74,8 +74,10 @@ Arquivos em `src/screens/hospitais/view/`.
 | Altura | Folha | Mapa | Quando |
 |---|---|---|---|
 | Recolhida | só alça, título e chips (~18% da tela) | quase tela cheia | abrir para olhar o mapa; ao selecionar um hospital |
-| Meio (padrão) | ~58% (como hoje) | ~42% | abertura do app |
-| Expandida | ~92%, lista quase inteira | faixa de busca | ver a lista toda |
+| Meio (padrão) | ~40% | ~60% | abertura do app |
+| Expandida | ~60% (teto) | ~40%, com a busca sempre à vista | ver mais da lista |
+
+**Ajuste de 24/11 ([M-092](../09-melhoria-continua/Historico-Melhorias.md)):** no teste da rc.20 a folha a 92% escondia a lista atrás da busca; as paradas passaram a 20% / 40% / 60%, com teto de 60%.
 
 A alça e o título "Perto de você" são a área de arraste; a lista só rola com a folha expandida (evita brigar com o gesto). Animação de 300 ms emphasized, como no padrão.
 
@@ -88,7 +90,7 @@ A alça e o título "Perto de você" são a área de arraste; a lista só rola c
 
 **Busca:** ao digitar, uma lista de sugestões (até 5) abre sob o campo; tocar numa sugestão seleciona; "buscar" no teclado seleciona a primeira. A lista da folha continua filtrada.
 
-**Mapa:** pin tocável seleciona (usa o mesmo padrão do mapa completo: o pin é uma `View` do React, e o mapa é desmontado antes de navegar). Toque em área vazia limpa a seleção. O botão de localização passa a **recentralizar na pessoa** e um botão novo "Mapa completo" (ícone de expandir) abre o `MapaTela`. O hospital da visita ativa e o selecionado sempre entram nos pins, mesmo fora dos 12 mais perto.
+**Mapa:** pin tocável seleciona (usa o mesmo padrão do mapa completo: o pin é uma `View` do React, e o mapa é desmontado antes de navegar). Toque em área vazia limpa a seleção. O botão de localização passa a **recentralizar na pessoa, no meio da faixa visível entre a busca e a folha** e um botão novo "Mapa completo" (ícone de expandir) abre o `MapaTela`. O hospital da visita ativa e o selecionado sempre entram nos pins, mesmo fora dos 12 mais perto.
 
 ```
  Recolhida + selecionado          Meio (padrão)            Expandida
