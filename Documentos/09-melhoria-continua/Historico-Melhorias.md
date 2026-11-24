@@ -4409,3 +4409,121 @@ Também ficam para depois:
 
 - recalibrar os limiares com a prova de carga no ambiente novo (P13/PERF-01);
 - o alerta de gasto, com o valor da P5.
+
+---
+
+## M-085 — `document` de outro módulo: de 221 usos para zero
+
+**Data:** 23 a 24/11/2026 · **Origem:** risco P2 (R3) da auditoria de arquitetura
+([Auditoria-Arquitetura-Padroes-v1.0.md](../08-analise%20tecnica/Auditoria-Arquitetura-Padroes-v1.0.md)
+§4.2 e §8), por pedido direto do PO · **PRs (pulseira-verde-backend):** #10, #13, #15, #16 e #17
+
+### Contexto
+
+- Depois do M-083, os serviços já não liam `repository` de outro módulo, mas ainda recebiam e
+  devolviam o `Document` do módulo dono (`VisitaDocument`, `FeedbackDocument`,
+  `HospitalDocument`, `UserDocument`): 221 usos congelados no `archunit_store`. Mudar um campo
+  de um `Document` obrigava a conferir os outros módulos.
+
+### O que mudou
+
+As fachadas passaram a devolver **projeções**: records pequenos, com só o que o chamador usa,
+em arquivos próprios no pacote `dto` do módulo dono, com `@Builder` do Lombok. Um PR por área,
+um de cada vez, sem mudar endpoint, JSON nem comportamento:
+
+| PR | Merge | Área | `document` de outro módulo |
+|---|---|---|---:|
+| #10 | `dba6b7c` | `user` deixa de usar `VisitaDocument` e `FeedbackDocument`: busca por usuário, hospitais afetados e anonimização (LGPD) vivem em `VisitaConsulta` e `FeedbackConsulta`; o PDF da exportação lê os campos pelo JSON | 221 → 200 |
+| #13 | `9991be8` | `indicador` e `visita`: `VisitaParaIndicador`, `FeedbackParaIndicador`, `HospitalResumo` e `HospitalNoPonto`; a consulta de geofence passa para o módulo `hospital` | 200 → 158 |
+| #15 | `3ed2c23` | `feedback`: `VisitaParaAvaliacao` (dono e encerrada) e `VisitaParaFeedback`; o `Update` que marca `SEM_FEEDBACK` vai para a visita | 158 → 130 |
+| #16 | `55b53be` | `auth` e `config.security`: `UsuarioAutenticavel` (o hash da senha nunca sai por API e o `toString` não o mostra) e os comandos `definirSenha` e `confirmarEmail` | 130 → 88 |
+| #17 | `24bafee` | carga de massa de avaliações (dev): `UsuarioMassa`, `VisitaMassa` e `HospitalConsulta.ativosParaMassa`, só no perfil `dev`, sem isenção | 88 → **0** |
+
+- A ordem da exclusão de conta (LGPD) foi preservada e ganhou teste: anonimiza visitas e
+  feedbacks e só então apaga o usuário.
+
+### Verificação
+
+- Em cada PR: suíte completa, JaCoCo, `diff-cover` do código novo (mínimo 90%), SonarCloud,
+  CodeQL e a trava de contagem de testes verdes; o store do ArchUnit só perdeu linhas. A revisão
+  de segurança do PR de `auth` (#16) não apontou vulnerabilidade (o endurecimento foi o `toString`
+  sem o hash da senha); no PR de `user` (#10) a ordem da exclusão de conta foi revisada e coberta
+  por teste.
+- Esteiras do merge de cada PR (CI, CD no Cloud Run e "Push on develop") lidas e verdes.
+
+### O que ficou de fora
+
+- Records de resposta da API anteriores à R3 seguem sem `@Builder` (ver M-086).
+
+---
+
+## M-086 — Padrão do PO: sem tipo aninhado e `@Builder` nos records
+
+**Data:** 24/11/2026 · **Origem:** pedido do PO durante a R3 · **PR (pulseira-verde-backend):** #14
+
+### Contexto
+
+- Ordem do PO: nenhum record, classe, enum ou interface declarado dentro de outra classe; cada
+  tipo vai para arquivo próprio e a classe que o usa só o importa; e objetos com vários campos
+  usam `@Builder` do Lombok.
+
+### O que mudou
+
+- Medidos 17 tipos aninhados em `src/main/java`; 15 foram para arquivo próprio no pacote do módulo
+  dono (`dto` quando cruzam a fronteira, o pacote do serviço quando são detalhe interno), com os
+  sete records extraídos já em `@Builder`. Os dois que sobraram (`Perfil` e `Massa`, da carga de
+  massa) saíram no #17. Hoje não há tipo aninhado em `src/main`.
+- Os schemas do OpenAPI de `Periodo` e `Finalidade` mantêm o nome por `@Schema(name = ...)`, então o
+  contrato publicado não mudou.
+- Novos testes reais: validade do `Guardado`, contagem do seed, finalidade de consentimento e o
+  JSON dos dois DTOs.
+
+### O que ficou de fora
+
+- **Padronização `@Builder` do código anterior à R3:** 25 records de resposta da API, criados por
+  `new` com três ou mais argumentos em 38 pontos de `src/main` (os maiores: `ApiError`,
+  `ConfiguracaoRemotaResponse`, os DTOs de `visita` e de `hospital`). Não foi feita em massa: são
+  DTOs de API, e `@Builder` em record pede conferir serialização e desserialização. A conversão
+  do pacote `visita/dto` está pronta e testada, com um teste de contrato do JSON, mas **não foi
+  enviada**; o recorte (por módulo) é decisão do PO.
+
+---
+
+## M-087 — Ciclos entre módulos do backend: de 28 arestas para zero
+
+**Data:** 24/11/2026 · **Origem:** risco P2 (R3) da auditoria, parte dos ciclos · **PRs
+(pulseira-verde-backend):** #18, #19, #20, #21 e #22
+
+### Contexto
+
+- As 28 arestas formavam um emaranhado só. As causas, medidas com `jdeps` por classe: o `config`
+  (usado por todos) dependia de `configuracao`, `visita` e `user`; o evento do feedback morava no
+  `indicador`; o job de retenção ficava na `visita` e chamava o `feedback`; a carga de massa
+  conhecia cinco módulos; o `hospital` lia o `indicador`; o `user` chamava o `auth`.
+
+### O que mudou
+
+Um corte por PR, cada um por inversão de dependência ou por mover o tipo para o módulo certo, sem
+mudar endpoint, JSON nem comportamento:
+
+| PR | Merge | Corte | Arestas |
+|---|---|---|---:|
+| #18 | `70e13cf` | `config` deixa de depender de módulos de negócio: `FonteDoModoSomenteLeitura` (implementada por `configuracao`), tratador do empate de geofence no módulo `visita`, `FonteDeContas` e `UsuarioAutenticavel` em `config.security`, `EmailNormalizer` em `config.util` | 28 → 16 |
+| #19 | `f1a06d0` | `FeedbackSalvoEvent` vai para o `feedback` (quem publica) e `RetencaoDadosPessoaisJob` para o módulo `jobs` | 16 → 15 |
+| #20 | `33a3dd0` | carga de massa vira o módulo `seed`, que depende dos demais e de que ninguém depende; o `feedback` ganha `FeedbackMassa` (dev) | 15 → 9 |
+| #21 | `b5e3d3a` | `hospital` lê os indicadores pela porta `IndicadoresDosHospitais`; o endpoint `GET /api/v1/hospitais/{id}/indicadores` vai para o módulo `indicador`, com o mesmo caminho e o mesmo grupo do OpenAPI | 9 → 2 |
+| #22 | em revisão | `user` envia o código de confirmação do e-mail pela interface `EnvioDeConfirmacaoDeEmail`, que o `auth` implementa | 2 → **0** |
+
+### Verificação
+
+- Em cada PR: suíte completa, JaCoCo, `diff-cover`, SonarCloud, CodeQL e a trava de contagem de
+  testes, com testes novos; os testes de contrato do OpenAPI passaram no #21. O #19 teve uma falha
+  transitória de container do Mongo na suíte local (passou isolado e a suíte do CI passou), registrada
+  no próprio PR.
+- Esteiras do merge dos PRs #18 a #21 lidas e verdes; as do #22 serão lidas no merge.
+
+### Resultado da R3 no backend
+
+`ArquiteturaModulosTest` (ArchUnit) com as três regras (ciclos entre módulos, `repository` e
+`document` privados do módulo) e **nenhuma exceção congelada**: `repository` 42 → 0, `document`
+221 → 0 e ciclos 28 → 0 (este último com o #22 em revisão).
