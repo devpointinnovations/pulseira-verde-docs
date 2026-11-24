@@ -1,7 +1,14 @@
 # 📚 Índice Central da Documentação — saude-monitor
 
 > **Sistema de Monitoramento Hospitalar por Geolocalização (Clinical Sanctuary)**
-> Última atualização: 23/11/2026 · Responsável: Gabriel Vogado
+> Última atualização: 24/11/2026 · Responsável: Gabriel Vogado
+
+---
+
+## 📌 Revisão 24/11/2026 — Homologação v1.0.0-rc.20 (app) e backend v1.0.0-rc.19
+
+**O que entrou:** dois registros de rc. O do backend ([`homologacoes/backend-v1.0.0-rc.19.md`](./10-git-flow/homologacoes/backend-v1.0.0-rc.19.md)) leva a R3 concluída (documents e ciclos entre módulos em zero, M-085 a M-088, pulseira-verde-backend #13 a #23) e a tendência simples da nota (#24, M-090). O do app ([`homologacoes/v1.0.0-rc.20.md`](./10-git-flow/homologacoes/v1.0.0-rc.20.md)) leva o controlador dos dados na Dev Point Innovations LTDA (#17, M-089), a busca e seleção de hospital no mapa do Início (#18, M-089) e a tendência no detalhe (#19, M-090). O backend é promovido antes do app. O prefixo `backend-` existe porque o número rc.19 já tem o registro do app.
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (registro de rc).
 
 ---
 
