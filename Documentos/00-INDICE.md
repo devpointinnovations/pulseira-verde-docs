@@ -1,7 +1,14 @@
 # 📚 Índice Central da Documentação — saude-monitor
 
 > **Sistema de Monitoramento Hospitalar por Geolocalização (Clinical Sanctuary)**
-> Última atualização: 24/11/2026 · Responsável: Gabriel Vogado
+> Última atualização: 25/11/2026 · Responsável: Gabriel Vogado
+
+---
+
+## 📌 Revisão 25/11/2026 — Homologação v1.0.0-rc.22 (app) e backend v1.0.0-rc.20
+
+**O que entrou:** dois registros de rc. O do backend ([`homologacoes/backend-v1.0.0-rc.20.md`](./10-git-flow/homologacoes/backend-v1.0.0-rc.20.md)) leva a escolha e a troca de unidade no check-in com geofences sobrepostos (pulseira-verde-backend #26, M-093) e a pré-release `dev` (#27, M-094). O do app ([`homologacoes/v1.0.0-rc.22.md`](./10-git-flow/homologacoes/v1.0.0-rc.22.md)) leva o aviso e a escolha de unidade (pulseira-verde-mobile #25, M-093), o README com GIFs e logo atuais (#23, #24 e #26) e a pré-release `dev` (#27, M-094). Par de teste: APK rc.22 + backend rc.20; o backend é promovido antes.
+**Sem mudança:** `De-Para-Backlog-Features.md` e `Historico-Melhorias.md` (registro de rc).
 
 ---
 
