@@ -4571,6 +4571,41 @@ pulseira-verde-docs (Política, Termos e página de exclusão de conta do site)
   traz também o endereço da sede.
 - Não alterado: autoria dos commits e créditos de autoria/PO em documentos internos.
 
+## M-093 — Check-in automático com unidades sobrepostas: avisar e deixar escolher ou trocar
+
+**Data:** 25/11/2026 · **Origem:** pergunta do PO ao testar a rc.21 no aparelho (Hospital Regional de Taguatinga e Cepav - Azaleia com geofences sobrepostos): "como será esse comportamento no modo automático? como eu vou escolher em qual unidade eu estou?" · **PRs:** pulseira-verde-backend e pulseira-verde-mobile (`feature/check-in-escolha-unidade`)
+
+### Contexto
+
+- O seletor "Várias unidades neste local" do Mapa só escolhe qual unidade abrir; não registra visita.
+- No automático o servidor já escolhia a unidade de centro mais próximo (RN-05) e, no empate (diferença de até 10 m), devolvia 409 sem criar a visita. Em segundo plano o app não fazia nada com esse 409, e a pessoa só descobria abrindo o app. Sem empate, a visita nascia na unidade mais próxima sem aviso e sem como corrigir.
+
+### O que mudou
+
+- **Opção A (desempate):** no 409 com candidatos, o app avisa por notificação local ("Em qual unidade você está?"). O toque abre o seletor e o app repete o check-in automático com `escolhidoNoDesempate`, a posição e o horário reais da chegada (`ocorridoEm`). O servidor aceita a escolha só se o hospital escolhido contiver a posição.
+- **Opção B (troca):** o check-in por geofence passa a devolver `alternativas` (as outras unidades cujo geofence também continha o local) e a visita guarda os ids delas. Com visita nova e alternativas, o app avisa "Registramos sua visita. Não é aqui? Toque para trocar." e o seletor chama o novo `PATCH /api/v1/visitas/{id}/hospital`, que só aceita uma das alternativas e mantém a entrada. A unidade anterior vira alternativa, para voltar atrás.
+- **Backend:** `CheckinRequest.escolhidoNoDesempate`, `CheckinResponse.alternativas`, `VisitaDocument.hospitaisAlternativos`, `TrocaHospitalRequest`, `ResolucaoGeofence`, `VisitaService.trocarHospital`. O endpoint de troca é anônimo como o checkout (dono pelo usuário ou pelo `dispositivoId`).
+- **App:** `EscolhaUnidadeService` (avisos e aplicação da escolha), `EscolhaUnidadeSheet` (seletor montado na raiz, para abrir também com o app fechado), `VisitaService.trocarHospital`. Depois da troca o geofencing descarta a região guardada do hospital antigo e a busca de novo para o novo.
+
+### Decisões
+
+- Um aviso por vez: o Enter de cada unidade sobreposta dispara a mesma situação, e a notificação tem identificador fixo.
+- A escolha do desempate é registrada com origem `GEOFENCE`, para o checkout automático seguir valendo.
+- O hospital sugerido pelo app continua ignorado no check-in automático sem escolha: só a escolha explícita da pessoa vale.
+
+### Verificação
+
+Medido em 25/11/2026, com os dois PRs aplicados sobre a `develop`:
+
+- **Backend:** suíte completa (`gradlew test`, JDK 25, Testcontainers com Docker): 777 testes, 0 falhas, 0 ignorados. A primeira rodada do `OpenApiContratoTest` falhou porque o total de operações passou de 45 para 46 com o `PATCH /api/v1/visitas/{id}/hospital`; a contagem e o comentário do teste foram atualizados no PR.
+- **App:** `jest` completo: 1019 testes em 77 suítes, 0 falhas com `--maxWorkers=2`. Com os workers padrão, duas rodadas tiveram 1 e 2 falhas intermitentes de `waitFor` em `HospitaisScreen` e `EsqueciSenhaScreen`, arquivos que este PR não altera; os dois passam isolados (60 testes). `npm run lint`: 0 erros, 12 avisos.
+- **Não verificado:** o fluxo em aparelho real (duas unidades sobrepostas, aviso e troca de unidade na tela); só os testes automatizados rodaram.
+
+### Limites
+
+- Sem permissão de notificação não há aviso; a pessoa ainda escolhe pelo detalhe do hospital (desempate) mas não tem atalho para trocar a visita já registrada. Um botão "Trocar unidade" na visita em andamento fica como evolução.
+- Não validado ainda em aparelho físico com duas unidades sobrepostas.
+
 ## M-092 — Início: folha limitada a 60% da tela e botão de localizar na faixa visível
 
 **Data:** 24/11/2026 · **Origem:** relato do PO ao testar a rc.20 no aparelho (lista escondida atrás da busca; botão de localizar "não centralizava") · **PR (pulseira-verde-mobile):** #21 · **Proposta:** [Proposta-UX-Busca-Hospital-Mapa-Inicio-v1.0](../03-ui-ux/Proposta-UX-Busca-Hospital-Mapa-Inicio-v1.0.md)
