@@ -402,7 +402,8 @@ Registra entrada (automática via geofence ou manual).
   "origem": "GEOFENCE",
   "posicao": { "type": "Point", "coordinates": [-46.627, -23.555] },
   "dispositivoId": "android-uuid-123",
-  "ocorridoEm": "2026-08-07T14:03:00Z"
+  "ocorridoEm": "2026-08-07T14:03:00Z",
+  "escolhidoNoDesempate": false
 }
 ```
 **201 Created**
@@ -411,7 +412,9 @@ Registra entrada (automática via geofence ou manual).
   "id": "652c9f3e1a2b3c4d5e6f7082",
   "hospitalId": "652c9f3e1a2b3c4d5e6f7080",
   "entrada": "2026-08-07T14:03:00Z",
-  "status": "EM_ATENDIMENTO"
+  "status": "EM_ATENDIMENTO",
+  "criado": true,
+  "alternativas": []
 }
 ```
 **Regras:** valida se ponto está dentro do geofence (`$geoIntersects`) quando `origem=GEOFENCE`; se já existe visita `EM_ATENDIMENTO` no mesmo hospital, retorna a existente (idempotente); `dispositivoId` permite visita anônima (sem login).
@@ -419,6 +422,11 @@ Registra entrada (automática via geofence ou manual).
 > **Prova de presença (SEG-01 — 18/10/2026):** o check-in `MANUAL` continua aceito de qualquer lugar, mas a visita só entra no indicador público (nota e tempo) com prova de presença: a `posicao` enviada no check-in está dentro do geofence do hospital e o check-in chegou até 45 min depois de `ocorridoEm`. O check-in `GEOFENCE` já valida a posição. Fica de fora o check-in sem posição, com posição fora do hospital ou retroativo além de 45 min. A resposta não muda; o campo `presencaComprovada` fica só no banco.
 
 > **`ocorridoEm` (opcional, OPS-05 — 03/09/2026):** momento real da entrada, enviado quando o check-in foi detectado **sem internet** e ficou na fila offline do aplicativo. Sem ele, o evento reenviado registraria a hora em que a conexão voltou, e o tempo de permanência passaria a medir a rede do aparelho em vez da fila do hospital. O campo é opcional e **não é confiável** (o endpoint é público, OPS-03): o servidor só o aceita no passado recente — dentro da janela de 24h da RN-04, nunca no futuro além de 5 min de tolerância de relógio. Fora disso vale o relógio do servidor.
+
+> **Geofences sobrepostos (E2-04/RN-05, M-093 — 25/11/2026):** com `origem=GEOFENCE` e a posição dentro de mais de um geofence, o servidor escolhe o hospital de centro mais próximo e devolve os outros em `alternativas` (`[{ "hospitalId", "nome", "distanciaMetros" }]`, vazia quando só um continha a posição). Se a diferença de distância entre os dois primeiros for de até 10 m, não cria a visita e responde **409** `CONFLITO_GEOFENCE` com `candidatos`. A pessoa escolhe e o app repete o check-in com `escolhidoNoDesempate: true`, o `hospitalId` escolhido, a mesma `posicao` e o `ocorridoEm` da chegada; o servidor usa a escolha, desde que o hospital contenha a posição (senão **400**). `escolhidoNoDesempate` não tem efeito em `MANUAL`.
+
+#### `PATCH /api/v1/visitas/{id}/hospital` 🔓/🔒
+Troca o hospital de uma visita ativa por uma das `alternativas` do check-in por geofence (M-093). **Request:** `{ "hospitalId": "...", "dispositivoId": "anon-..." }` (`dispositivoId` como no checkout) → **200**, mesmo corpo do check-in com `criado: false`. A entrada e o restante da visita não mudam; o hospital anterior passa a ser alternativa. **404** visita inexistente; **403** quem chama não é o dono; **409** visita já encerrada; **400** hospital que não era alternativa (ou visita sem alternativas). Trocar para o hospital atual devolve a visita sem mudar nada.
 
 #### `POST /api/v1/visitas/{id}/checkout` 🔒
 Registra saída. **Request:** `{ "posicao": {...}, "gpsIndisponivel": false, "encerramentoManual": false, "ocorridoEm": "2026-08-07T16:45:00Z" }` → **200**
