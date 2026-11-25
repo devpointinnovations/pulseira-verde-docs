@@ -4648,3 +4648,18 @@ pulseira-verde-docs (Política, Termos e página de exclusão de conta do site)
 - Entre um recálculo e outro (até 30 dias sem feedback novo no hospital), a tendência mostrada é a do último recálculo; o mesmo já acontece com a nota de 90 dias, porque o job só recalcula hospitais com atividade recente.
 - Hospitais sem atividade desde a entrega só ganham tendência no próximo feedback ou visita processada.
 
+
+## M-094 — Pré-release `dev` na aba Releases (app e backend)
+
+**Data:** 25/11/2026 · **Origem:** pedido do PO: a versão de desenvolvimento também deve aparecer na aba Releases, ao lado das rcs de homologação · **PRs:** [pulseira-verde-mobile #27](https://github.com/devpointinnovations/pulseira-verde-mobile/pull/27) e [pulseira-verde-backend #27](https://github.com/devpointinnovations/pulseira-verde-backend/pull/27)
+
+### O que mudou
+
+- Novo `.github/workflows/release-dev.yml` nos dois repositórios, disparado por `workflow_run` quando o CD da `develop` (`CD - Mobile (APK via Gradle)` e `CD - Backend (Google Cloud Run)`) termina com sucesso num push.
+- Existe **uma** Release só, a pré-release com a tag `dev`, apagada e recriada no commit novo a cada build/deploy verde. Uma tag por build encheria a lista de tags. No app, leva o APK dev anexado; no backend, não leva anexo (a entrega é a imagem no Artifact Registry, citada nas notas pela SHA).
+- Nunca é a Release "latest", e a tag `dev` não casa com `v*-rc.*`, então o cálculo das rcs de homologação não a vê. `cd-homologacao.yml`, `cd-mobile-apk.yml` e `cd-backend-google.yml` não foram alterados.
+- Se a `develop` já andou, o build antigo não publica: só o do commit mais novo.
+
+### Limites
+
+- `workflow_run` só executa o workflow que está na branch padrão, então a validação real é o primeiro push na `develop` depois do merge dos dois PRs.

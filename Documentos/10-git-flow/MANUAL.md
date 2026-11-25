@@ -138,6 +138,7 @@ feature/* ──► develop ──► master ──► release/<tag>
    anterior, o roteiro de teste e o resultado. Ele é escrito num PR `doc/` para a
    `develop` antes da promoção, e o resultado é preenchido depois da validação.
    Primeiro registro: [`v1.0.0-rc.5`](./homologacoes/v1.0.0-rc.5.md) (15/10/2026).
+7. **Pré-release `dev` (desde 25/11/2026, M-094).** Além das rcs, a aba Releases do app e do backend tem uma única pré-release com a tag `dev`, apagada e recriada a cada build/deploy verde na `develop` (`release-dev.yml`, por `workflow_run`). No app leva o APK dev; no backend, sem anexo. Nunca é a Release "latest" e não entra no cálculo das rcs.
 
 > ⚠️ **Pré-requisitos (uma vez):** a chave de release do APK
 > ([`deploy/android/README.md`](../../deploy/android/README.md)), o banco/usuário
